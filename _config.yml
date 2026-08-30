@@ -1,0 +1,9 @@
+# SilentXx Astro Theme 配置
+# 分类映射：分类名 → 英文链接标识（用于生成 /categories/<link> 路由）
+
+category_map:
+  新手入门: getting-started
+  策略进阶: strategies
+  实盘分享: real-trading
+  交易洞察: insights
+  工具与资源: tools
