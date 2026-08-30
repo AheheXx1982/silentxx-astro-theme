@@ -1,0 +1,75 @@
+---
+import HomeSider from '@components/layout/HomeSider.astro';
+import Cover from '@components/ui/cover/Cover.astro';
+import { seoConfig } from '@constants/site-config';
+import Layout from './Layout.astro';
+import TwoColumnLayout from './TwoColumnLayout.astro';
+import QuoteMarquee from '@components/fun/QuoteMarquee.astro';
+import IllusionaryThoughtsContent from '@components/fun/IllusionaryThoughtsContent.astro';
+import { getLanguageFromAstroUrl, getSeoConfig, getUIText } from '@lib/i18n';
+
+export interface Props {
+  frontmatter: {
+    title: string;
+    description?: string;
+  };
+}
+
+const { frontmatter } = Astro.props;
+
+// 获取当前语言
+const currentLang = getLanguageFromAstroUrl(Astro.url);
+const localizedSeoConfig = getSeoConfig(currentLang as any);
+const uiText = getUIText(currentLang as any);
+
+// 判断是否为幻念集页面
+const isIllusionaryThoughts = frontmatter.title === '幻念集' || frontmatter.title === 'Thoughts';
+
+// 获取本地化的页面标题
+const localizedPageTitle =
+  currentLang === 'en'
+    ? {
+        About: 'About',
+        幻念集: 'Illusionary Thoughts',
+        Thoughts: 'Illusionary Thoughts',
+      }[frontmatter.title] || frontmatter.title
+    : frontmatter.title;
+---
+
+<Layout title={`${localizedPageTitle} | ${localizedSeoConfig.title}`}>
+  <TwoColumnLayout>
+    <Cover slot="cover" title={localizedPageTitle} lang={currentLang} showSiteInfo={true} />
+    <HomeSider slot="sider" lang={currentLang} />
+    <QuoteMarquee lang={currentLang} />
+    <div class="shadow-box bg-gradient-start mx-0 flex w-full flex-col gap-8 p-4 pt-6 md:px-3 md:py-2">
+      {
+        isIllusionaryThoughts ? (
+          <IllusionaryThoughtsContent lang={currentLang} />
+        ) : (
+          <div class="prose dark:prose-invert tablet:max-w-[calc(100vw-2.5rem)] tablet:w-auto w-[calc(100vw-20rem)] max-w-5xl">
+            <slot />
+          </div>
+        )
+      }
+    </div>
+  </TwoColumnLayout>
+</Layout>
+
+<script>
+  // 监听Astro页面加载事件，确保在客户端路由切换时能正确更新内容
+  document.addEventListener('astro:page-load', () => {
+    // 如果是幻念集页面，触发一次更新
+    const path = window.location.pathname;
+    const isIllusionaryThoughts = path.includes('illusionary-thoughts');
+
+    if (isIllusionaryThoughts) {
+      // 不再触发空的更新事件，让IllusionaryThoughtsContent组件自己处理更新
+      console.log('Illusionary Thoughts page loaded, waiting for component to update content');
+    }
+  });
+
+  // 监听路由切换事件
+  document.addEventListener('astro:after-swap', () => {
+    console.log('Route changed, triggering content update if needed');
+  });
+</script>

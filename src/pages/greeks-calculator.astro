@@ -1,0 +1,30 @@
+---
+// Greeks Calculator Page
+import Layout from '@layouts/Layout.astro';
+import TwoColumnLayout from '@layouts/TwoColumnLayout.astro';
+import Cover from '@components/ui/cover/Cover.astro';
+import HomeSider from '@components/layout/HomeSider.astro';
+import GreeksCalculator from '@components/options/GreeksCalculator';
+import { Icon } from 'astro-icon/components';
+---
+
+<Layout title="Greeks 计算器">
+  <TwoColumnLayout>
+    <Cover slot="cover" lang="zh" />
+    <HomeSider slot="sider" lang="zh" />
+
+    <div class="space-y-6">
+      <div class="flex items-center gap-3">
+        <Icon name="ri:calculator-line" class="h-7 w-7 text-primary" />
+        <div>
+          <h1 class="text-2xl font-bold">🧮 Greeks 计算器</h1>
+          <p class="text-sm text-muted-foreground mt-1">
+            Black-Scholes 模型 · 实时计算期权 Greeks
+          </p>
+        </div>
+      </div>
+
+      <GreeksCalculator client:load />
+    </div>
+  </TwoColumnLayout>
+</Layout>

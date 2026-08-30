@@ -1,0 +1,31 @@
+---
+import PersonalLayout from '@layouts/PersonalLayout.astro';
+const title = '文章';
+const description = '问心剑的文章列表';
+---
+
+<PersonalLayout title={title} description={description}>
+
+  <section class="max-w-2xl mx-auto">
+    <h1 class="text-3xl font-serif text-stone-800 mb-8">文章</h1>
+
+    <div class="space-y-4">
+      <article class="p-5 rounded-lg border border-stone-200 bg-white">
+        <time class="text-xs text-stone-400">2026-07-26</time>
+        <h3 class="mt-1 text-lg font-medium text-stone-800">
+          <a href="/personal/article/hello-world" class="hover:text-amber-600 transition-colors">
+            你好，这里是问心
+          </a>
+        </h3>
+        <p class="mt-2 text-sm text-stone-500 leading-relaxed">
+          从骆驼祥子到问心剑——一个关于成长、投资与自我认知的故事。
+        </p>
+      </article>
+
+      <p class="text-center text-sm text-stone-400 py-8">
+        更多文章即将上线。
+      </p>
+    </div>
+  </section>
+
+</PersonalLayout>

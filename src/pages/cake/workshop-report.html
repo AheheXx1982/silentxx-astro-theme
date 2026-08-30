@@ -1,0 +1,1383 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TCF 车间报数系统 · 概念演示</title>
+<style>
+  :root {
+    --brand: #C0392B;
+    --bg: #F7F5F2;
+    --card: #FFFFFF;
+    --ink: #2C2C2C;
+    --muted: #8A8A8A;
+    --green: #27AE60;
+    --yellow: #F39C12;
+    --red: #E74C3C;
+    --border: #E8E3DC;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+    background: var(--bg); color: var(--ink);
+    max-width: 520px; margin: 0 auto; padding: 16px 14px 40px; line-height: 1.5;
+  }
+  /* 桌面宽屏自适应：整页 1200px，单列布局——所有卡片全宽、边框一致，内容自然展开整页滚动 */
+  @media (min-width: 900px) {
+    body { max-width: 1200px; }
+    #viewForm { display: block; }
+  }
+  .header { display: flex; align-items: center; gap: 10px; margin-bottom: 14px; }
+  .logo {
+    width: 38px; height: 38px; border-radius: 10px;
+    background: linear-gradient(135deg, var(--brand), #E67E22);
+    display: flex; align-items: center; justify-content: center;
+    color: #fff; font-weight: 800; font-size: 15px;
+  }
+  .header h1 { font-size: 17px; font-weight: 700; }
+  .header span { font-size: 11px; color: var(--muted); }
+  .badge-demo {
+    background: #FFF3CD; color: #856404; border: 1px solid #FFEEBA;
+    padding: 3px 10px; border-radius: 999px; font-size: 11px; font-weight: 600;
+  }
+  /* 版本号徽章 */
+  .ver-badge {
+    display: inline-block; font-size: 11px; font-weight: 700; color: var(--brand);
+    background: #FDF3F2; border: 1px solid #F5C6CB; border-radius: 999px; padding: 2px 8px;
+    vertical-align: middle; margin-left: 4px; letter-spacing: .02em;
+  }
+  .tabs { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; margin-bottom: 14px; }
+  .tabs button {
+    border: 1px solid var(--border); background: var(--card); border-radius: 12px;
+    padding: 12px 4px; font-size: 13px; font-weight: 700; cursor: pointer; color: var(--ink);
+  }
+  .tabs button.active { background: var(--brand); color: #fff; border-color: var(--brand); }
+  .card {
+    background: var(--card); border: 1px solid var(--border); border-radius: 14px;
+    padding: 16px; margin-bottom: 14px;
+  }
+  .card h2 { font-size: 15px; font-weight: 700; margin-bottom: 12px; display: flex; align-items: center; justify-content: space-between; }
+  label { display: block; font-size: 12.5px; color: var(--muted); margin: 10px 0 4px; }
+  select, input {
+    width: 100%; border: 1.5px solid var(--border); border-radius: 10px;
+    padding: 12px; font-size: 15px; background: #fff; color: var(--ink);
+  }
+  select:focus, input:focus { outline: none; border-color: var(--brand); }
+  .btn-submit {
+    width: 100%; margin-top: 16px; border: none; border-radius: 12px;
+    background: var(--brand); color: #fff; font-size: 16px; font-weight: 700;
+    padding: 14px; cursor: pointer;
+  }
+  .btn-submit:active { transform: scale(0.98); }
+  .toast {
+    position: fixed; left: 50%; bottom: 24px; transform: translateX(-50%);
+    background: var(--green); color: #fff; padding: 10px 20px; border-radius: 999px;
+    font-size: 14px; font-weight: 600; opacity: 0; transition: opacity .3s; pointer-events: none;
+    z-index: 99;
+  }
+  .toast.show { opacity: 1; }
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  th { text-align: left; padding: 7px 6px; color: var(--muted); font-weight: 600; border-bottom: 2px solid var(--border); white-space: nowrap; }
+  td { padding: 7px 6px; border-bottom: 1px solid #F0ECE6; word-break: break-word; }
+  .table-scroll { overflow-x: auto; }
+  .kpis { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 14px; }
+  .kpi { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 12px 14px; }
+  .kpi .label { font-size: 11px; color: var(--muted); }
+  .kpi .value { font-size: 20px; font-weight: 800; margin-top: 2px; }
+  .hidden { display: none !important; }
+  .empty { color: var(--muted); text-align: center; padding: 20px 0; font-size: 13px; }
+  .hist-group { margin-bottom: 16px; }
+  .hist-date {
+    font-size: 13px; font-weight: 700; color: var(--brand); margin-bottom: 6px;
+    display: flex; align-items: center; gap: 6px;
+  }
+  .hist-date .cnt { font-weight: 400; color: var(--muted); font-size: 11.5px; }
+  .btn-reset {
+    border: 1px solid var(--border); background: #fff; color: var(--muted);
+    border-radius: 8px; padding: 3px 10px; font-size: 11px; cursor: pointer;
+  }
+  .btn-reset:hover { color: var(--brand); border-color: var(--brand); }
+  .dot { width: 9px; height: 9px; border-radius: 3px; display: inline-block; flex: none; }
+  .dept-tag { display: inline-flex; align-items: center; white-space: nowrap; }
+  .dept-tag .dot { margin-right: 5px; }
+  .cust-mini { white-space: nowrap; font-size: 12.5px; color: #555; }
+  .tag-semi-mini { display: inline-block; margin-left: 4px; padding: 0 6px; border-radius: 6px; font-size: 10.5px; font-weight: 600; background: #FEF3E2; color: #B45309; border: 1px solid #FDE3B5; vertical-align: middle; }
+  .tag-finished { display: inline-block; margin-left: 4px; padding: 0 6px; border-radius: 6px; font-size: 10.5px; font-weight: 600; background: #E8F8F0; color: var(--green); border: 1px solid #BEEBD8; vertical-align: middle; }
+  .cust-box { min-height: 22px; display: flex; align-items: center; }
+  .cust-empty { color: var(--muted); font-size: 13px; }
+  .tag-cust {
+    display: inline-block; padding: 4px 12px; border-radius: 8px; font-size: 13px;
+    background: #F6F3EF; border: 1px solid var(--border); color: #5A554E; font-weight: 600;
+  }
+  .legend-colors { display: flex; flex-wrap: wrap; gap: 6px 14px; margin-bottom: 12px; }
+  .legend-colors span { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; color: #555; }
+  .spec-muted { color: var(--muted); }
+
+  /* —— 搜索选产品 —— */
+  .search-wrap { position: relative; }
+  .search-drop {
+    position: absolute; top: calc(100% + 4px); left: 0; right: 0; z-index: 50;
+    background: #fff; border: 1px solid var(--border); border-radius: 12px;
+    box-shadow: 0 8px 24px rgba(0,0,0,.10); max-height: 320px; overflow-y: auto;
+  }
+  .search-drop .s-item {
+    display: flex; align-items: center; gap: 8px; padding: 12px 12px;
+    border-bottom: 1px solid #F0ECE6; cursor: pointer; font-size: 14px;
+  }
+  .search-drop .s-item:last-child { border-bottom: none; }
+  .search-drop .s-item:active { background: #F7F5F2; }
+  .s-item .s-prod { font-weight: 700; white-space: nowrap; }
+  .s-item .s-spec { color: var(--muted); font-size: 12px; margin-left: 4px; }
+  .s-item .s-meta { margin-left: auto; font-size: 11.5px; color: var(--muted); white-space: nowrap; }
+  .s-empty { padding: 14px; text-align: center; color: var(--muted); font-size: 13px; }
+
+  /* —— 已选产品（搜索 / 目录两种方式共用） —— */
+  .pick-box {
+    display: flex; align-items: center; gap: 8px; margin-top: 10px;
+    background: #FBF9F7; border: 1px solid var(--border); border-radius: 10px; padding: 10px 12px;
+  }
+  .pick-box .pick-info { font-size: 14px; font-weight: 700; flex: 1; display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+  .pick-clear {
+    border: 1px solid var(--border); background: #fff; color: var(--muted);
+    border-radius: 8px; padding: 5px 10px; font-size: 12px; cursor: pointer; flex: none;
+  }
+  .pick-clear:active { color: var(--brand); border-color: var(--brand); }
+
+  /* —— 订单看板日历 —— */
+  .cal-head { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+  .cal-head b { font-size: 15px; }
+  .cal-nav { border: 1px solid var(--border); background: #fff; border-radius: 8px; width: 30px; height: 30px; font-size: 16px; cursor: pointer; color: var(--muted); }
+  .cal-hint { margin-left: auto; font-size: 11.5px; color: var(--muted); }
+  .cal-dow { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; margin-bottom: 4px; }
+  .cal-dow span { text-align: center; font-size: 11.5px; color: var(--muted); font-weight: 600; }
+  .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; }
+  .cal-day { min-height: 52px; background: #FBF9F7; border: 1px solid var(--border); border-radius: 8px; padding: 4px; cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 2px; }
+  .cal-day.empty { background: transparent; border-color: transparent; cursor: default; }
+  .cal-day.today { background: #FDF3F2; border-color: var(--brand); }
+  .cal-day.today .cal-num { color: var(--brand); font-weight: 700; }
+  .cal-day.has { background: #E8F8F0; border-color: #BEEBD8; }
+  .cal-day.over { background: #FDEDEC; border-color: #F5C6CB; }
+  .cal-num { font-size: 12px; font-weight: 600; color: var(--ink); }
+  .cal-badge { font-size: 10px; color: var(--green); font-weight: 600; }
+  .cal-day.over .cal-badge { color: var(--red); }
+  .cal-note { margin-top: 10px; font-size: 11.5px; color: var(--muted); }
+  .cal-modal { position: fixed; inset: 0; background: rgba(0,0,0,.4); z-index: 999; display: flex; align-items: center; justify-content: center; padding: 20px; }
+  .cal-modal.hidden { display: none; }
+  .cal-modal-box { background: #fff; border-radius: 14px; max-width: 460px; width: 100%; max-height: 70vh; overflow: auto; padding: 16px; box-shadow: 0 12px 40px rgba(0,0,0,.2); }
+  .cal-modal-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
+  .cal-modal-head b { font-size: 15px; }
+  .cal-modal-x { border: none; background: #FDF3F2; color: var(--red); width: 28px; height: 28px; border-radius: 8px; cursor: pointer; }
+  .cal-o { border: 1px solid var(--border); border-radius: 10px; padding: 10px; margin-bottom: 8px; background: #FBF9F7; }
+  .cal-o-top { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; margin-bottom: 4px; }
+  .cal-o-top b { font-size: 13.5px; }
+  .cal-o-sub { font-size: 12px; color: var(--muted); margin-top: 2px; }
+
+  /* 历史记录切换 */
+  .hist-tabs { display: flex; gap: 8px; margin-bottom: 10px; }
+  .hist-tabs button {
+    border: 1px solid var(--border); background: #fff; color: var(--muted);
+    border-radius: 999px; padding: 6px 16px; font-size: 13px; cursor: pointer; font-weight: 600;
+  }
+  .hist-tabs button.active { background: var(--brand); border-color: var(--brand); color: #fff; }
+
+  /* —— 批量报数列表（连续点击添加，一键提交） —— */
+  .pick-list {
+    margin-top: 10px; background: #FBF9F7; border: 1px solid var(--border); border-radius: 12px; padding: 12px;
+  }
+  .pick-list-head { font-size: 12.5px; font-weight: 700; color: var(--muted); margin-bottom: 8px; }
+  .pick-row {
+    display: flex; align-items: center; gap: 8px; padding: 8px 6px; border-bottom: 1px dashed var(--border);
+  }
+  .pick-row:last-child { border-bottom: none; }
+  .pick-row .dot { flex: none; }
+  .pr-name { flex: 1; font-size: 13.5px; font-weight: 700; line-height: 1.4; min-width: 0; }
+  .pr-cust { display: block; font-size: 11px; font-weight: 400; color: var(--muted); }
+  .pr-qty {
+    width: 76px; flex: none; text-align: center; font-size: 15px; font-weight: 700;
+    border: 1px solid var(--border); border-radius: 8px; padding: 7px 4px; background: #fff;
+  }
+  .pr-note {
+    width: 92px; flex: none; font-size: 12.5px;
+    border: 1px solid var(--border); border-radius: 8px; padding: 7px 8px; background: #fff;
+  }
+  .rec-note { font-size: 12px; color: #B45309; background: #FEF3E2; border-radius: 6px; padding: 2px 8px; display: inline-block; max-width: 180px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .pr-del {
+    flex: none; width: 28px; height: 28px; border: none; background: #FDF3F2; color: var(--red);
+    border-radius: 8px; cursor: pointer; font-size: 13px;
+  }
+  .pick-list-foot {
+    display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-top: 10px; padding-top: 10px;
+    border-top: 1px solid var(--border);
+  }
+  #pickTotal { font-size: 12.5px; color: var(--muted); font-weight: 600; }
+  .pick-empty { margin-top: 10px; text-align: center; color: var(--muted); font-size: 12.5px; background: #FBF9F7; border: 1px dashed var(--border); border-radius: 12px; padding: 16px 10px; }
+
+  /* —— 15 分钟内可删除纠错 —— */
+  .btn-del {
+    border: 1px solid #E8D5D2; background: #FDF3F2; color: var(--red);
+    border-radius: 8px; padding: 3px 10px; font-size: 12px; cursor: pointer; white-space: nowrap;
+  }
+  .btn-del:active { background: #FBE5E3; }
+  .rec-hint { font-size: 11.5px; color: var(--muted); margin: -6px 0 8px; }
+
+  /* —— 两种输入方式分隔 —— */
+  .mode-divider {
+    display: flex; align-items: center; gap: 10px; margin: 14px 0 2px;
+    color: var(--muted); font-size: 12px; font-weight: 600;
+  }
+  .mode-divider::before, .mode-divider::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+
+  /* —— 快捷推荐 + 字母索引目录面板 —— */
+  .dept-filter { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 12px; }
+  .dept-filter button {
+    display: inline-flex; align-items: center; gap: 5px;
+    border: 1px solid var(--border); background: #fff; border-radius: 999px;
+    padding: 6px 12px; font-size: 12.5px; font-weight: 600; cursor: pointer; color: var(--ink);
+  }
+  .dept-filter button:active { background: #F7F5F2; }
+  .dept-filter button.active { background: var(--brand); color: #fff; border-color: var(--brand); }
+  .quick-group { margin-bottom: 10px; }
+  .quick-head { font-size: 12px; font-weight: 700; color: var(--muted); margin-bottom: 6px; }
+  .quick-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+  .quick-chip {
+    display: inline-flex; align-items: center; gap: 5px;
+    border: 1px solid var(--border); background: #fff; border-radius: 999px;
+    padding: 6px 12px; font-size: 12.5px; font-weight: 600; cursor: pointer; color: var(--ink);
+  }
+  .quick-chip:active { background: #F7F5F2; border-color: var(--brand); }
+  .quick-chip .qc-meta { font-size: 11px; color: var(--red); font-weight: 700; }
+  .alpha-bar { display: flex; flex-wrap: wrap; gap: 4px; margin: 8px 0 10px; }
+  .alpha-btn {
+    min-width: 30px; border: 1px solid var(--border); background: #fff; border-radius: 8px;
+    padding: 5px 4px; font-size: 12px; font-weight: 700; cursor: pointer; color: var(--ink);
+  }
+  .alpha-btn.active { background: var(--brand); color: #fff; border-color: var(--brand); }
+  .alpha-groups { max-height: 380px; overflow-y: auto; border: 1px solid var(--border); border-radius: 10px; background: #fff; }
+  .alpha-group { border-bottom: 1px solid #F0ECE6; }
+  .alpha-group:last-child { border-bottom: none; }
+  .alpha-head {
+    position: sticky; top: 0; background: #FAF8F5; padding: 6px 12px;
+    font-size: 12px; font-weight: 800; color: var(--brand); border-bottom: 1px solid #F0ECE6;
+  }
+  .alpha-item {
+    display: flex; align-items: center; gap: 8px; padding: 10px 12px;
+    border-bottom: 1px solid #F7F4F0; cursor: pointer; font-size: 14px;
+  }
+  .alpha-item:last-child { border-bottom: none; }
+  .alpha-item:active { background: #F7F5F2; }
+  .ai-name { font-weight: 700; }
+  .ai-specs { margin-left: auto; font-size: 11.5px; color: var(--muted); white-space: nowrap; }
+  .alpha-specs { display: flex; flex-wrap: wrap; gap: 6px; padding: 4px 12px 10px; background: #FBF9F7; border-bottom: 1px solid #F7F4F0; }
+  .alpha-specs.hidden { display: none; }
+  .spec-chip {
+    border: 1px solid var(--border); background: #fff; border-radius: 8px;
+    padding: 6px 10px; font-size: 12.5px; cursor: pointer; color: var(--ink); font-weight: 600;
+  }
+  .spec-chip:active { border-color: var(--brand); color: var(--brand); }
+
+  /* —— 出库 / 订单面板 —— */
+  .due-badge { display: inline-block; padding: 2px 9px; border-radius: 999px; font-size: 11.5px; font-weight: 600; white-space: nowrap; }
+  .due-badge.ok { background: #E8F8F0; color: var(--green); }
+  .due-badge.today { background: #FEF5E7; color: var(--yellow); }
+  .due-badge.over { background: #FDEDEC; color: var(--red); }
+  .status-select {
+    border: 1px solid var(--border); border-radius: 8px; padding: 4px 6px;
+    font-size: 12.5px; background: #fff; color: var(--ink); cursor: pointer;
+  }
+  .status-select:focus { outline: none; border-color: var(--brand); }
+  .order-sub { font-size: 11px; color: var(--muted); margin-top: 2px; }
+  .order-actions { display: flex; gap: 4px; align-items: center; }
+
+  @media (max-width: 420px) {
+    .card { padding: 13px; }
+    table { font-size: 12.5px; }
+    .s-item .s-meta { max-width: 110px; overflow: hidden; text-overflow: ellipsis; }
+  }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="logo">TCF</div>
+  <div>
+    <h1>车间报数系统 <span class="ver-badge" id="verBadge">V1.0.0</span></h1>
+    <span>主管手机报数 · 老板随时看</span>
+  </div>
+  <span class="badge-demo">⚡ 演示</span>
+</div>
+
+<div class="tabs">
+  <button id="tabForm" class="active" onclick="switchView('form')">📱 车间报数</button>
+  <button id="tabBoard" onclick="switchView('board')">📊 库存看板</button>
+  <button id="tabOut" onclick="switchView('out')">🚚 出库登记</button>
+  <button id="tabOrder" onclick="switchView('order')">📋 订单看板</button>
+  <button id="tabHist" onclick="switchView('hist')">📅 历史记录</button>
+</div>
+
+<!-- 报数视图 -->
+<div id="viewForm" class="view">
+  <div class="card">
+    <h2>📝 今日产量报数</h2>
+
+    <div class="dept-filter" id="deptFilter"></div>
+
+    <label>方式一 · 搜索选产品 <span style="color:var(--muted);font-weight:400">（输入首字母 / 单词 / 中文名）</span></label>
+    <div class="search-wrap">
+      <input id="prodSearch" type="text" placeholder="🔍 例：RED、muffin、马卡龙、海绵…" autocomplete="off">
+      <div id="searchDrop" class="search-drop hidden"></div>
+    </div>
+
+    <div class="mode-divider">或按目录选择（字母索引 · 快捷推荐）</div>
+
+    <div id="catalogPanel"></div>
+
+    <div id="pickListBox" class="pick-list hidden">
+      <div class="pick-list-head">📋 已选产品（连续点击添加 · 逐个填数量）</div>
+      <div id="pickRows"></div>
+      <div class="pick-list-foot">
+        <span id="pickTotal">共 0 个产品</span>
+        <button class="btn-submit" onclick="submitBatch()">📤 一键提交报数</button>
+      </div>
+    </div>
+    <div class="pick-empty" id="pickEmpty">👆 点击上方产品（搜索 / 常用 / 字母）加入批量列表</div>
+  </div>
+  <div class="card">
+    <h2>今日报数记录</h2>
+    <div class="rec-hint">🗑 录入后 15 分钟内可删除纠错，超时请联系管理员</div>
+    <div id="recordsBox"></div>
+  </div>
+</div>
+
+<!-- 看板视图 -->
+<div id="viewBoard" class="view hidden">
+  <div class="kpis">
+    <div class="kpi"><div class="label">今日报数总量</div><div class="value" id="kTotal">0</div></div>
+    <div class="kpi"><div class="label">参与车间/部门</div><div class="value" id="kDepts">0</div></div>
+    <div class="kpi"><div class="label">今日出库总量</div><div class="value" id="kOut">0</div></div>
+    <div class="kpi"><div class="label">待交付订单</div><div class="value" id="kOrder">0</div></div>
+  </div>
+  <div class="card">
+    <h2>部门颜色图例</h2>
+    <div class="legend-colors" id="deptLegend"></div>
+  </div>
+  <div class="card">
+    <h2>按产品汇总（今日）</h2>
+    <div class="table-scroll"><div id="byProduct"></div></div>
+  </div>
+  <div class="card">
+    <h2>按车间/部门汇总（今日）</h2>
+    <div class="table-scroll"><div id="byDept"></div></div>
+  </div>
+</div>
+
+<!-- 出库视图 -->
+<div id="viewOut" class="view hidden">
+  <div class="kpis">
+    <div class="kpi"><div class="label">今日出库总量</div><div class="value" id="kOutTotal">0</div></div>
+    <div class="kpi"><div class="label">今日出库笔数</div><div class="value" id="kOutCount">0</div></div>
+  </div>
+  <div class="card">
+    <h2>🚚 出库登记</h2>
+    <div class="picker" id="outPicker"></div>
+    <div id="outPickListBox" class="pick-list hidden">
+      <div class="pick-list-head">📋 已选产品（连续点击添加 · 逐个填数量 / 备注）</div>
+      <div id="outPickRows"></div>
+      <div class="pick-list-foot">
+        <span id="outPickTotal">共 0 个产品</span>
+        <button class="btn-submit" onclick="submitOutBatch()">📤 一键出库</button>
+      </div>
+    </div>
+    <div class="pick-empty" id="outPickEmpty">👆 点击上方产品加入出库列表（部门领用 / 出货）</div>
+  </div>
+  <div class="card">
+    <h2>今日出库记录</h2>
+    <div class="rec-hint">🗑 出库后 15 分钟内可删除纠错，超时请联系管理员</div>
+    <div id="outRecordsBox"></div>
+  </div>
+</div>
+
+<!-- 订单视图 -->
+<div id="viewOrder" class="view hidden">
+  <div class="kpis">
+    <div class="kpi"><div class="label">进行中订单</div><div class="value" id="kOrdCount">0</div></div>
+    <div class="kpi"><div class="label">待交付件数</div><div class="value" id="kOrdQty">0</div></div>
+  </div>
+  <div class="card">
+    <div class="cal-head">
+      <button class="cal-nav" onclick="calMonth(-1)">‹</button>
+      <b id="calTitle">2026年8月</b>
+      <button class="cal-nav" onclick="calMonth(1)">›</button>
+      <span class="cal-hint">点击日期查看当天订单</span>
+    </div>
+    <div class="cal-dow"><span>日</span><span>一</span><span>二</span><span>三</span><span>四</span><span>五</span><span>六</span></div>
+    <div class="cal-grid" id="calGrid"></div>
+    <div class="cal-note">📌 全部门订单日历 · 订单统一由办公室录入，本看板只读显示</div>
+  </div>
+</div>
+
+<!-- 订单日历弹窗 -->
+<div class="cal-modal hidden" id="calModal" onclick="if(event.target===this)calClose()">
+  <div class="cal-modal-box">
+    <div class="cal-modal-head"><b id="calModalTitle">📅 订单</b><button class="cal-modal-x" onclick="calClose()">✕</button></div>
+    <div id="calModalBody"></div>
+  </div>
+</div>
+
+<!-- 历史视图 -->
+<div id="viewHist" class="view hidden">
+  <div class="hist-tabs">
+    <button class="active" id="histTabReport" onclick="switchHist('report')">📊 历史报数</button>
+    <button id="histTabOut" onclick="switchHist('out')">🚚 历史出库</button>
+  </div>
+  <div class="card">
+    <h2 id="histTitle">历史报数记录</h2>
+    <div id="historyBox"></div>
+  </div>
+</div>
+
+<div class="toast" id="toast">✓ 已登记</div>
+
+<script>
+const KEY = 'tcf_reports_demo_v11';
+const OUT_KEY = 'tcf_outbound_demo_v3';
+const ORDER_KEY = 'tcf_orders_demo_v2';
+const ORDER_STATUS = ['待生产', '生产中', '已完成', '已取消'];
+
+function localDate(d) {
+  const y = d.getFullYear();
+  const m = String(d.getMonth()+1).padStart(2,'0');
+  const day = String(d.getDate()).padStart(2,'0');
+  return `${y}-${m}-${day}`;
+}
+const today = () => localDate(new Date());
+function daysAgo(n) {
+  const d = new Date(); d.setDate(d.getDate() - n); return localDate(d);
+}
+
+// 部门颜色（7 个车间/部门各自一色）
+const DEPT_COLORS = {
+  '06车间':            '#2563EB',
+  '07车间 · 马卡龙部门': '#DB2777',
+  '07车间 · 小黑':      '#7C3AED',
+  '07车间 · 小敏':      '#EA580C',
+  '08车间 · 饼干部门':  '#CA8A04',
+  '08车间 · 家俊':      '#0D9488',
+  '21车间':            '#DC2626',
+};
+const CUST_ICONS = { 'MBS':'🏨', '香格里拉':'🏨', 'fh':'🏨', 'pp':'🏨', '学校':'🎓', '医院':'🏥' };
+// 半成品清单：产品大类 → 下一工序部门（其余默认为成品）
+const SEMI_FINISHED = { '海绵蛋糕': '21车间' };
+const semiBadge = (p) => SEMI_FINISHED[p] ? ` <span class="tag-semi-mini">半成品</span>` : '';
+// 流转标签：半成品显示「→目标部门·入库位置」，成品显示绿色「成品」
+function flowBadge(p) {
+  if (!p) return '';
+  if (p.type === '半成品') {
+    let s = '半成品';
+    if (p.target) s += ' → ' + p.target;
+    if (p.storage === '直取') s += ' · 当天直取';
+    else if (p.storage === '直转') s += ' · 直转';
+    else if (p.storage && p.storage !== '21' && p.storage !== '07') s += ' · ' + p.storage;
+    return `<span class="tag-semi-mini">${s}</span>`;
+  }
+  return '<span class="tag-finished">成品 → 可出货</span>';
+}
+const flowBadgeR = (r) => r.type ? flowBadge(r) : '';
+
+// 产品目录：车间 → 部门 → 产品大类 → 规格（含今日产量基准 + 客户）
+const DEPT_DATA = [
+  { ws:'06车间', sub:'', items:[
+    { cat:'海绵蛋糕', specs:[['',120,'MBS']] },
+    { cat:'瑞士卷', specs:[['',45,'香格里拉']] },
+    { cat:'牛角包', specs:[['',70,'学校']] },
+    { cat:'奶油蛋糕卷', specs:[['',25,'香格里拉']] },
+  ]},
+  { ws:'07车间', sub:'马卡龙部门', items:[
+    { cat:'马卡龙礼盒', specs:[['',60,'MBS']] },
+    { cat:'马卡龙', specs:[['',85,'香格里拉']] },
+    { cat:'马卡龙塔', specs:[['',20,'MBS']] },
+  ]},
+  { ws:'07车间', sub:'小黑', items:[
+    { cat:'布朗尼', specs:[['',80,'fh']] },
+    { cat:'巧克力曲奇', specs:[['',55,'医院']] },
+  ]},
+  { ws:'07车间', sub:'小敏', items:[
+    { cat:'提拉米苏', specs:[['',50,'pp']] },
+    { cat:'慕斯杯', specs:[['',70,'MBS']] },
+    { cat:'布丁', specs:[['',40,'学校']] },
+  ]},
+  { ws:'08车间', sub:'饼干部门', items:[
+    { cat:'曲奇混合装', specs:[['',35,'医院']] },
+    { cat:'黄油曲奇', specs:[['',90,'fh']] },
+    { cat:'蔓越莓饼干', specs:[['',48,'学校']] },
+  ]},
+  { ws:'08车间', sub:'家俊', items:[
+    { cat:'司康饼', specs:[['',60,'pp']] },
+    { cat:'玛德琳', specs:[['',45,'香格里拉']] },
+  ]},
+  { ws:'21车间', sub:'', items:[
+    { cat:'NY Cheese', specs:[['4000g',18,'MBS','成品','','21']] },
+    { cat:'Red Velvet', specs:[
+      ['3000g',12,'香格里拉','成品','','21'], ['1350g',20,'香格里拉','成品','','21'],
+      ['6" 350g',30,'香格里拉','成品','','21'], ['8" 400g',25,'香格里拉','成品','','21'],
+      ['9" 500g',15,'MBS','成品','','21'], ['Mini Cup Cake',80,'MBS','成品','','21'] ] },
+    { cat:'Black Velvet', specs:[
+      ['3400g',14,'MBS','成品','','21'],
+      ['3200g',10,'06','半成品','06','直取'],
+      ['1700g',12,'07','半成品','07','21'] ] },
+    { cat:'Butter SP', specs:[['6" 320g',28,'pp','成品','','21'], ['8" 400g',22,'pp','成品','','21']] },
+    { cat:'Choc Fudge', specs:[['3450g',16,'fh','成品','','21']] },
+    { cat:'Brownie Walnut', specs:[['3500g',12,'fh','成品','','21']] },
+    { cat:'Mango Vegan', specs:[['2500g',18,'香格里拉','成品','','21']] },
+    { cat:'Banana Cake', specs:[['4000g',15,'学校','成品','','21']] },
+    { cat:'Carrot Cake', specs:[['4000g',15,'学校','成品','','21']] },
+    { cat:'Muffin', specs:[['Corn',60,'学校','成品','','21'],['Choc',70,'学校','成品','','21'],['Blueberry',65,'学校','成品','','21'],['Kaya',55,'学校','成品','','21']] },
+    { cat:'Banana Loaf', specs:[['400g',40,'医院','成品','','21']] },
+    // —— 2026-08-29 同步 21车间专属版目录（数据共享，报数记录可搜索匹配）——
+    { cat:'Vanilla SP', specs:[['750g', 18, '香格里拉', '成品', '', '21']] },
+    { cat:'Macha Sponge', specs:[['830g', 10, '06', '半成品', '06', '直取']] },
+    { cat:'Japan Cheese', specs:[['7" 350g', 20, 'MBS', '成品', '', '21'], ['8" 600g', 12, 'MBS', '成品', '', '21']] },
+    { cat:'Mini Banana For MBS', specs:[['1box*84nos', 30, 'MBS', '成品', '', '']] },
+    { cat:'Oreo Cheese', specs:[['9cm 120g', 40, 'MBS', '成品', '', '21']] },
+    { cat:'Soft Sponge', specs:[['850g', 12, '06', '半成品', '06', '直取']] },
+    { cat:'Chocolate SP', specs:[['750g', 12, '08', '半成品', '08', '21']] },
+  ]},
+];
+const fullName = (ws, sub) => sub ? `${ws} · ${sub}` : ws;
+const prodName = (cat, spec) => spec ? `${cat} ${spec}` : cat;
+
+// 扁平产品索引（供搜索）：带类型/目标部门/入库位置
+const PROD_INDEX = [];
+DEPT_DATA.forEach(d => d.items.forEach(c => c.specs.forEach(([spec, qty, cust, type, target, storage]) => {
+  PROD_INDEX.push({ dept: fullName(d.ws, d.sub), cat: c.cat, spec, product: prodName(c.cat, spec), cust, type: type || '成品', target: target || '', storage: storage || '21' });
+})));
+
+function buildSeed() {
+  // 精选种子（2026-08-29 同步）：21车间 = 21车间专属版（workshop-report21）同款记录；
+  // 其他车间 = 少量代表性演示记录（老板演示有数据、不显假）
+  const now = Date.now();
+  const d = (n) => { const x = new Date(); x.setDate(x.getDate() + n); return localDate(x); };
+  const r = (id, dept, product, customer, qty, date, ts, extra = {}) => ({ id, dept, product, customer, qty, date, ts, type: '成品', target: '', storage: '', ...extra });
+  return [
+    // —— 21车间（与 21车间专属版同步，含 unit/location）—— 今日 7 条
+    r('s1', '21车间', 'Red Velvet 3000g', '07', 6, d(0), now - 3600e3, { type: '半成品', target: '07', storage: '21', location: '21冷库 A1架' }),
+    r('s2', '21车间', 'Choc Fudge 3450g', '07', 8, d(0), now - 7200e3, { type: '半成品', target: '07', storage: '21', location: '21冷库 A2架' }),
+    r('s3', '21车间', 'NY Cheese 4000g', '07', 5, d(0), now - 10800e3, { type: '半成品', target: '07', storage: '21', location: '21冷库 B1架' }),
+    r('s4', '21车间', 'Vanilla SP 750g', '08', 12, d(0), now - 14400e3, { type: '半成品', target: '08', storage: '21', location: '21冷库 B2架' }),
+    r('s5', '21车间', 'Macha Sponge 830g', '06', 8, d(0), now - 18000e3, { type: '半成品', target: '06', storage: '直取', location: '06 直取' }),
+    r('s6', '21车间', 'Japan Cheese 7" 350g', 'MBS', 20, d(0), now - 21600e3, { type: '成品', storage: '21', unit: 'nos', location: '21冷库 C1架' }),
+    r('s7', '21车间', 'Mini Banana For MBS 1box*84nos', 'MBS', 30, d(0), now - 25200e3, { type: '成品', storage: '21', unit: 'nos', location: '21冷库 C2架' }),
+    // 昨天 4 条
+    r('s8', '21车间', 'Oreo Cheese 9cm 120g', 'MBS', 25, d(-1), now - 86400e3, { type: '成品', storage: '21', location: '21冷库 A1架' }),
+    r('s9', '21车间', 'Red Velvet 3000g', '07', 6, d(-1), now - 90000e3, { type: '半成品', target: '07', storage: '21', location: '21冷库 A1架' }),
+    r('s10', '21车间', 'Banana Loaf 400g', '医院', 18, d(-1), now - 93600e3, { type: '成品', storage: '', location: '出货区' }),
+    r('s11', '21车间', 'Soft Sponge 850g', '06', 10, d(-1), now - 97200e3, { type: '半成品', target: '06', storage: '直取', location: '06 直取' }),
+    // 前天 3 条
+    r('s12', '21车间', 'Choc Fudge 3450g', '07', 8, d(-2), now - 172800e3, { type: '半成品', target: '07', storage: '21', location: '21冷库 A2架' }),
+    r('s13', '21车间', 'Japan Cheese 7" 350g', 'MBS', 18, d(-2), now - 176400e3, { type: '成品', storage: '21', unit: 'nos', location: '21冷库 C1架' }),
+    r('s14', '21车间', 'Chocolate SP 750g', '08', 12, d(-2), now - 180000e3, { type: '半成品', target: '08', storage: '21', location: '21冷库 B2架' }),
+    // —— 06 慕斯 ——
+    r('a1', '06车间', '海绵蛋糕', 'MBS', 120, d(0), now - 2000e3, { type: '半成品', target: '21车间', storage: '21' }),
+    r('a2', '06车间', '瑞士卷', '香格里拉', 45, d(0), now - 4000e3),
+    r('a3', '06车间', '牛角包', '学校', 70, d(0), now - 6000e3),
+    r('a4', '06车间', '海绵蛋糕', 'MBS', 110, d(-1), now - 90000e3, { type: '半成品', target: '21车间', storage: '21' }),
+    // —— 07 马卡龙 ——
+    r('b1', '07车间 · 马卡龙部门', '马卡龙', '香格里拉', 85, d(0), now - 2500e3),
+    r('b2', '07车间 · 马卡龙部门', '马卡龙礼盒', 'MBS', 40, d(0), now - 4500e3),
+    r('b3', '07车间 · 马卡龙部门', '马卡龙', '香格里拉', 80, d(-1), now - 91000e3),
+    // —— 07 小黑 ——
+    r('c1', '07车间 · 小黑', '布朗尼', 'fh', 80, d(0), now - 3000e3),
+    r('c2', '07车间 · 小黑', '巧克力曲奇', '医院', 55, d(0), now - 5000e3),
+    // —— 07 小敏 ——
+    r('d1', '07车间 · 小敏', '提拉米苏', 'pp', 50, d(0), now - 3500e3),
+    r('d2', '07车间 · 小敏', '慕斯杯', 'MBS', 70, d(0), now - 5500e3),
+    r('d3', '07车间 · 小敏', '布丁', '学校', 40, d(-1), now - 92000e3),
+    // —— 08 饼干 ——
+    r('e1', '08车间 · 饼干部门', '黄油曲奇', 'fh', 90, d(0), now - 4000e3),
+    r('e2', '08车间 · 饼干部门', '曲奇混合装', '医院', 35, d(0), now - 6000e3),
+    r('e3', '08车间 · 饼干部门', '蔓越莓饼干', '学校', 48, d(-1), now - 93000e3),
+    // —— 08 家俊 ——
+    r('f1', '08车间 · 家俊', '司康饼', 'pp', 60, d(0), now - 4500e3),
+    r('f2', '08车间 · 家俊', '玛德琳', '香格里拉', 45, d(0), now - 6500e3),
+  ];
+}
+const seed = buildSeed();
+
+// —— 出库种子：每天出货约为产量的 55%~95%，历史 3 天 + 当天 ——
+function buildOutSeed() {
+  // 精选种子（2026-08-29 同步）：21车间 = 21车间专属版同款出库；其他车间 = 少量演示
+  const now = Date.now();
+  const d = (n) => { const x = new Date(); x.setDate(x.getDate() + n); return localDate(x); };
+  const r = (id, dept, product, customer, qty, date, ts, extra = {}) => ({ id, dept, product, customer, qty, date, ts, type: '成品', target: '', storage: '', ...extra });
+  return [
+    // —— 21车间（与 21车间专属版同步）—— 今日 5 条
+    r('o1', '21车间', 'Red Velvet 3000g', '07', 5, d(0), now - 3500e3, { type: '半成品', target: '07', storage: '21' }),
+    r('o2', '21车间', 'NY Cheese 4000g', '07', 4, d(0), now - 7000e3, { type: '半成品', target: '07', storage: '21' }),
+    r('o3', '21车间', 'Vanilla SP 750g', '08', 10, d(0), now - 10500e3, { type: '半成品', target: '08', storage: '21' }),
+    r('o4', '21车间', 'Macha Sponge 830g', '06', 8, d(0), now - 14000e3, { type: '半成品', target: '06', storage: '直取' }),
+    r('o5', '21车间', 'Japan Cheese 7" 350g', 'MBS', 15, d(0), now - 17500e3, { storage: '21' }),
+    // 昨天 3 条
+    r('o6', '21车间', 'Oreo Cheese 9cm 120g', 'MBS', 20, d(-1), now - 85000e3, { storage: '21' }),
+    r('o7', '21车间', 'Red Velvet 3000g', '07', 5, d(-1), now - 89000e3, { type: '半成品', target: '07', storage: '21' }),
+    r('o8', '21车间', 'Banana Loaf 400g', '医院', 15, d(-1), now - 93000e3),
+    // 前天 2 条
+    r('o9', '21车间', 'Choc Fudge 3450g', '07', 6, d(-2), now - 171000e3, { type: '半成品', target: '07', storage: '21' }),
+    r('o10', '21车间', 'Japan Cheese 7" 350g', 'MBS', 15, d(-2), now - 175000e3, { storage: '21' }),
+    // —— 其他车间（演示）——
+    r('oa1', '06车间', '瑞士卷', '香格里拉', 30, d(0), now - 3000e3),
+    r('oa2', '06车间', '牛角包', '学校', 50, d(0), now - 5000e3),
+    r('oa3', '06车间', '海绵蛋糕', 'MBS', 60, d(-1), now - 87000e3, { type: '半成品', target: '21车间', storage: '21' }),
+    r('ob1', '07车间 · 马卡龙部门', '马卡龙', '香格里拉', 60, d(0), now - 3200e3),
+    r('ob2', '07车间 · 马卡龙部门', '马卡龙礼盒', 'MBS', 25, d(0), now - 5200e3),
+    r('ob3', '07车间 · 马卡龙部门', '马卡龙', '香格里拉', 50, d(-1), now - 88000e3),
+    r('oc1', '07车间 · 小黑', '布朗尼', 'fh', 50, d(0), now - 3400e3),
+    r('od1', '07车间 · 小敏', '提拉米苏', 'pp', 30, d(0), now - 3600e3),
+    r('oe1', '08车间 · 饼干部门', '黄油曲奇', 'fh', 60, d(0), now - 3800e3),
+    r('oe2', '08车间 · 饼干部门', '蔓越莓饼干', '学校', 30, d(-1), now - 89000e3),
+    r('of1', '08车间 · 家俊', '司康饼', 'pp', 40, d(0), now - 4000e3),
+  ];
+}
+const outSeed = buildOutSeed();
+
+// —— 订单种子：待交付 + 已完成/已取消，交货日期含今日/未来/超期 ——
+function buildOrderSeed() {
+  const now = Date.now();
+  const dstr = (n) => { const d = new Date(); d.setDate(d.getDate() + n); return localDate(d); };
+  return [
+    { id: 'od01', dept: '21车间', product: 'Red Velvet 8" 400g', customer: '香格里拉', qty: 12, due: dstr(0), status: '待生产', ts: now - 86400000 * 2 },
+    { id: 'od02', dept: '21车间', product: 'NY Cheese 4000g', customer: 'MBS', qty: 6, due: dstr(0), status: '生产中', ts: now - 86400000 },
+    { id: 'od03', dept: '07车间 · 马卡龙部门', product: '马卡龙', customer: '香格里拉', qty: 80, due: dstr(0), status: '待生产', ts: now - 7200000 },
+    { id: 'od04', dept: '06车间', product: '海绵蛋糕', customer: 'MBS', qty: 60, due: dstr(1), status: '待生产', ts: now - 5400000 },
+    { id: 'od05', dept: '08车间 · 饼干部门', product: '黄油曲奇', customer: 'fh', qty: 50, due: dstr(1), status: '生产中', ts: now - 86400000 * 2 },
+    { id: 'od06', dept: '21车间', product: 'Muffin Choc', customer: '学校', qty: 120, due: dstr(2), status: '待生产', ts: now - 3600000 },
+    { id: 'od07', dept: '21车间', product: 'Red Velvet Mini Cup Cake', customer: 'MBS', qty: 100, due: dstr(3), status: '待生产', ts: now - 1800000 },
+    { id: 'od08', dept: '07车间 · 小敏', product: '提拉米苏', customer: 'pp', qty: 30, due: dstr(2), status: '已完成', ts: now - 86400000 * 3 },
+    { id: 'od09', dept: '07车间 · 小黑', product: '布朗尼', customer: 'fh', qty: 40, due: dstr(1), status: '已完成', ts: now - 86400000 * 2 },
+    { id: 'od10', dept: '21车间', product: 'Banana Loaf 400g', customer: '医院', qty: 60, due: dstr(0), status: '已取消', ts: now - 86400000 },
+    // 关联订单：其他部门出货，但由 21 提供半成品（胚/卷）→ 21 看板也要显示
+    { id: 'od11', dept: '08车间', involve: '21车间', product: 'Oreo Cheese 6" 500g', customer: 'MBS', qty: 6, due: dstr(1), status: '待生产', ts: now - 7200000 },
+    { id: 'od12', dept: '07车间', involve: '21车间', product: 'Red Velvet 3000g', customer: '香格里拉', qty: 8, due: dstr(2), status: '生产中', ts: now - 86400000 },
+  ];
+}
+const orderSeed = buildOrderSeed();
+
+function load() {
+  const raw = localStorage.getItem(KEY);
+  if (!raw) { localStorage.setItem(KEY, JSON.stringify(seed)); return [...seed]; }
+  try { return JSON.parse(raw); } catch(e) { return [...seed]; }
+}
+function save(list) { localStorage.setItem(KEY, JSON.stringify(list)); }
+
+const deptTag = (dept) => {
+  const c = DEPT_COLORS[dept] || '#888';
+  return `<span class="dept-tag"><span class="dot" style="background:${c}"></span>${dept}</span>`;
+};
+const custMini = (cust) => `<span class="cust-mini">${CUST_ICONS[cust] || '📦'} ${cust || '—'}</span>`;
+
+// —— 批量报数列表（连续点击添加，逐个填数量，一键提交） ——
+let pickList = [];
+
+function addToPick(p) {
+  if (!p) return;
+  if (pickList.some(x => x.p.product === p.product)) {
+    showToast('已在批量列表：' + p.product);
+    return;
+  }
+  pickList.push({ p, qty: '', note: '' });
+  recordPick(p);
+  renderPickList();
+}
+function removeFromPick(idx) {
+  pickList.splice(idx, 1);
+  renderPickList();
+}
+function setPickQty(idx, qty) {
+  if (pickList[idx]) pickList[idx].qty = qty;
+  renderPickTotal();
+}
+function setPickNote(idx, note) {
+  if (pickList[idx]) pickList[idx].note = note;
+}
+function renderPickList() {
+  const box = document.getElementById('pickListBox');
+  const rows = document.getElementById('pickRows');
+  const empty = document.getElementById('pickEmpty');
+  if (!pickList.length) {
+    box.classList.add('hidden');
+    if (empty) empty.classList.remove('hidden');
+    return;
+  }
+  box.classList.remove('hidden');
+  if (empty) empty.classList.add('hidden');
+  rows.innerHTML = pickList.map((x, i) => {
+    const p = x.p;
+    const c = DEPT_COLORS[p.dept] || '#888';
+    return `<div class="pick-row">
+      <span class="dot" style="background:${c}"></span>
+      <span class="pr-name">${p.product} ${flowBadge(p)}<span class="pr-cust">${CUST_ICONS[p.cust] || '📦'} ${p.cust}</span></span>
+      <input class="pr-qty" type="number" min="0" value="${x.qty}" placeholder="数量" oninput="setPickQty(${i}, this.value)">
+      <input class="pr-note" type="text" value="${x.note || ''}" placeholder="备注…" oninput="setPickNote(${i}, this.value)">
+      <button class="pr-del" onclick="removeFromPick(${i})">✕</button>
+    </div>`;
+  }).join('');
+  renderPickTotal();
+}
+function renderPickTotal() {
+  const total = pickList.reduce((s, x) => s + (parseInt(x.qty, 10) || 0), 0);
+  document.getElementById('pickTotal').textContent = `共 ${pickList.length} 个产品 · 合计 ${total} 件`;
+}
+function submitBatch() {
+  const valid = pickList.filter(x => parseInt(x.qty, 10) > 0);
+  if (!valid.length) { showToast('请先填写数量'); return; }
+  const now = Date.now();
+  const list = load();
+  valid.forEach((x, i) => {
+    list.push({ id: 'b' + now + i, dept: x.p.dept, product: x.p.product, customer: x.p.cust, qty: parseInt(x.qty, 10), date: today(), ts: now - i * 1000, type: x.p.type, target: x.p.target, storage: x.p.storage, note: (x.note || '').trim() });
+  });
+  save(list);
+  pickList = [];
+  renderPickList();
+  renderRecords();
+  renderBoard();
+  showToast(`✓ 已登记 ${valid.length} 个产品`);
+}
+
+// —— 报数车间/部门选择入口（总版：各车间单独报数 or 统一报数的切换入口）——
+let curDept = '';
+function renderDeptFilter() {
+  const bar = document.getElementById('deptFilter');
+  if (!bar) return;
+  let html = `<button class="${curDept === '' ? 'active' : ''}" onclick="setDeptFilter('')">🌐 全部车间</button>`;
+  Object.keys(DEPT_COLORS).forEach(d => {
+    const c = DEPT_COLORS[d];
+    html += `<button class="${curDept === d ? 'active' : ''}" onclick="setDeptFilter('${d}')"><span class="dot" style="background:${c}"></span>${d}</button>`;
+  });
+  bar.innerHTML = html;
+}
+function setDeptFilter(dept) {
+  curDept = dept;
+  const s = document.getElementById('prodSearch');
+  if (s) s.value = '';
+  document.getElementById('searchDrop').classList.add('hidden');
+  renderDeptFilter();
+  renderCatalog('catalogPanel', (p) => addToPick(p), curDept);
+}
+
+// —— 方式一：搜索选产品 ——
+function searchProducts(q, dept) {
+  const ql = q.toLowerCase();
+  const starts = [], contains = [];
+  PROD_INDEX.forEach(p => {
+    if (dept && p.dept !== dept) return;
+    const name = p.product.toLowerCase();
+    const hay = `${p.product} ${p.cat} ${p.spec} ${p.dept}`.toLowerCase();
+    if (name.startsWith(ql)) starts.push(p);
+    else if (hay.includes(ql)) contains.push(p);
+  });
+  return starts.concat(contains);
+}
+
+function renderSearchDrop(q, dept) {
+  const drop = document.getElementById('searchDrop');
+  if (!q) { drop.classList.add('hidden'); drop.innerHTML = ''; return; }
+  const res = searchProducts(q, dept);
+  if (!res.length) {
+    drop.innerHTML = '<div class="s-empty">没有匹配的产品 😕</div>';
+    drop.classList.remove('hidden');
+    return;
+  }
+  const MAX = 12;
+  const shown = res.slice(0, MAX);
+  drop.innerHTML = shown.map(p => {
+    const c = DEPT_COLORS[p.dept] || '#888';
+    return `<div class="s-item" data-idx="${PROD_INDEX.indexOf(p)}">
+      <span class="dot" style="background:${c}"></span>
+      <span class="s-prod">${p.cat}</span>${p.spec ? `<span class="s-spec">${p.spec}</span>` : ''}
+      <span class="s-meta">${CUST_ICONS[p.cust] || ''} ${p.dept}</span>
+    </div>`;
+  }).join('') + (res.length > MAX ? `<div class="s-empty">还有 ${res.length - MAX} 个结果，继续输入缩小范围</div>` : '');
+  drop.classList.remove('hidden');
+}
+
+function pickProduct(p) {
+  document.getElementById('searchDrop').classList.add('hidden');
+  addToPick(p);
+}
+
+const prodSearch = document.getElementById('prodSearch');
+prodSearch.addEventListener('input', () => renderSearchDrop(prodSearch.value.trim(), curDept));
+prodSearch.addEventListener('focus', () => { if (prodSearch.value.trim()) renderSearchDrop(prodSearch.value.trim(), curDept); });
+prodSearch.addEventListener('keydown', (e) => { if (e.key === 'Escape') document.getElementById('searchDrop').classList.add('hidden'); });
+document.getElementById('searchDrop').addEventListener('click', (e) => {
+  const item = e.target.closest('.s-item');
+  if (!item) return;
+  const p = PROD_INDEX[parseInt(item.dataset.idx, 10)];
+  prodSearch.value = '';
+  pickProduct(p);
+});
+document.addEventListener('click', (e) => {
+  if (!e.target.closest('.search-wrap')) document.getElementById('searchDrop').classList.add('hidden');
+});
+
+// —— 方式二：目录选择（快捷推荐 + 字母索引面板，报数表单 / 出库 / 订单 共用）——
+const QUICK_KEY = 'tcf_pick_counts_v2';
+// 常用仅保留用户指定的 4 款（避免太乱）
+const QUICK_SEED = {
+  'Red Velvet 3000g|21车间': 15,
+  'Choc Fudge 3450g|21车间': 12,
+  'Brownie Walnut 3500g|21车间': 10,
+  'NY Cheese 4000g|21车间': 8,
+};
+function loadQuick() {
+  try {
+    const raw = localStorage.getItem(QUICK_KEY);
+    if (raw) return JSON.parse(raw);
+  } catch (e) {}
+  localStorage.setItem(QUICK_KEY, JSON.stringify(QUICK_SEED));
+  return Object.assign({}, QUICK_SEED);
+}
+function recordPick(p) {
+  if (!p) return;
+  const q = loadQuick();
+  const k = p.product + '|' + p.dept;
+  q[k] = (q[k] || 0) + 1;
+  localStorage.setItem(QUICK_KEY, JSON.stringify(q));
+}
+// 大类首字母：英文取首个字母大写，中文/数字归 #
+const alphaOf = (cat) => { const m = String(cat).match(/[A-Za-z]/); return m ? m[0].toUpperCase() : '#'; };
+function buildAlphaGroups(dept) {
+  const groups = {};
+  PROD_INDEX.filter(p => !dept || p.dept === dept).forEach(p => {
+    if (!groups[p.cat]) groups[p.cat] = { cat: p.cat, dept: p.dept, specs: [], alpha: alphaOf(p.cat) };
+    groups[p.cat].specs.push(p);
+  });
+  const byAlpha = {};
+  Object.values(groups).forEach(g => { (byAlpha[g.alpha] = byAlpha[g.alpha] || []).push(g); });
+  Object.keys(byAlpha).forEach(a => byAlpha[a].sort((x, y) => (x.cat < y.cat ? -1 : x.cat > y.cat ? 1 : 0)));
+  return byAlpha;
+}
+// 快捷推荐：🔥 明日生产（待交付订单按交期取前 6）+ ⭐ 常用（固定 QUICK_SEED 4 条，不随使用变化）
+function renderQuickBar(container, onPick, dept) {
+  const common = Object.keys(QUICK_SEED)
+    .map(k => { const [product, d] = k.split('|'); return PROD_INDEX.find(p => p.product === product && p.dept === d) || null; })
+    .filter(Boolean)
+    .filter(p => !dept || p.dept === dept);
+  const orderBy = {};
+  loadOrders().filter(o => o.status === '待生产' || o.status === '生产中').forEach(o => {
+    const k = o.product + '|' + o.dept;
+    if (!orderBy[k]) orderBy[k] = { product: o.product, dept: o.dept, qty: 0, due: o.due };
+    orderBy[k].qty += o.qty;
+    if (o.due < orderBy[k].due) orderBy[k].due = o.due;
+  });
+  const tomorrow = Object.values(orderBy).filter(x => !dept || x.dept === dept).sort((a, b) => a.due.localeCompare(b.due)).slice(0, 6)
+    .map(x => { const p = PROD_INDEX.find(pp => pp.product === x.product && pp.dept === x.dept); return p ? { p, qty: x.qty } : null; })
+    .filter(Boolean);
+  let html = '';
+  if (tomorrow.length) {
+    html += '<div class="quick-group"><div class="quick-head">🔥 明日生产（订单）</div><div class="quick-chips">';
+    tomorrow.forEach(({ p, qty }) => {
+      const c = DEPT_COLORS[p.dept] || '#888';
+      html += `<button class="quick-chip" data-idx="${PROD_INDEX.indexOf(p)}"><span class="dot" style="background:${c}"></span>${p.product}<span class="qc-meta">×${qty}</span></button>`;
+    });
+    html += '</div></div>';
+  }
+  if (common.length) {
+    html += '<div class="quick-group"><div class="quick-head">⭐ 常用</div><div class="quick-chips">';
+    common.forEach(p => {
+      const c = DEPT_COLORS[p.dept] || '#888';
+      html += `<button class="quick-chip" data-idx="${PROD_INDEX.indexOf(p)}"><span class="dot" style="background:${c}"></span>${p.product}</button>`;
+    });
+    html += '</div></div>';
+  }
+  container.innerHTML = html || '<div class="empty">暂无推荐，先搜索或按字母选择</div>';
+  container.querySelectorAll('.quick-chip').forEach(chip => {
+    chip.addEventListener('click', () => {
+      const p = PROD_INDEX[parseInt(chip.dataset.idx, 10)];
+      if (p) onPick(p);
+    });
+  });
+}
+// 字母索引面板：A-Z 索引条 + 按首字母分组的大类列表（多规格点开选）
+function renderAlphaPanel(container, onPick, dept) {
+  const byAlpha = buildAlphaGroups(dept);
+  const alphas = Object.keys(byAlpha).sort();
+  let html = '<div class="alpha-bar"><button class="alpha-btn active" data-a="all">全部</button>';
+  alphas.forEach(a => { html += `<button class="alpha-btn" data-a="${a}">${a}</button>`; });
+  html += '</div><div class="alpha-groups">';
+  const specsMap = {};
+  alphas.forEach(a => {
+    html += `<div class="alpha-group" data-a="${a}"><div class="alpha-head">${a}</div><div class="alpha-items">`;
+    byAlpha[a].forEach(g => {
+      const c = DEPT_COLORS[g.dept] || '#888';
+      const multi = g.specs.length > 1;
+      html += `<div class="alpha-item" data-cat="${g.cat}" data-dept="${g.dept}">
+        <span class="dot" style="background:${c}"></span><span class="ai-name">${g.cat}</span>
+        <span class="ai-specs">${multi ? g.specs.length + ' 规格' : (g.specs[0].spec || '单规格')}</span>
+      </div>`;
+      if (multi) {
+        const sid = g.cat + '|' + g.dept;
+        html += `<div class="alpha-specs hidden" data-sid="${sid}">`;
+        g.specs.forEach(p => {
+          html += `<button class="spec-chip" data-idx="${PROD_INDEX.indexOf(p)}">${p.spec}</button>`;
+        });
+        html += '</div>';
+      }
+    });
+    html += '</div></div>';
+  });
+  html += '</div>';
+  container.innerHTML = html;
+  // 字母过滤
+  container.querySelectorAll('.alpha-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      container.querySelectorAll('.alpha-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      const a = btn.dataset.a;
+      container.querySelectorAll('.alpha-group').forEach(gp => gp.classList.toggle('hidden', a !== 'all' && gp.dataset.a !== a));
+    });
+  });
+  // 点大类：单规格直接选；多规格展开/收起规格 chips
+  container.querySelectorAll('.alpha-item').forEach(item => {
+    item.addEventListener('click', () => {
+      const sid = item.dataset.cat + '|' + item.dataset.dept;
+      const specEl = container.querySelector(`.alpha-specs[data-sid="${sid}"]`);
+      if (!specEl) {
+        const p = PROD_INDEX.find(x => x.cat === item.dataset.cat && x.dept === item.dataset.dept);
+        if (p) onPick(p);
+      } else {
+        specEl.classList.toggle('hidden');
+      }
+    });
+  });
+  container.querySelectorAll('.spec-chip').forEach(chip => {
+    chip.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const p = PROD_INDEX[parseInt(chip.dataset.idx, 10)];
+      if (p) onPick(p);
+    });
+  });
+}
+// 渲染完整目录区（快捷推荐 + 字母面板），onPick 由调用方提供（如 setPicked + recordPick）；dept 传车间/部门则只显示该车间
+function renderCatalog(containerId, onPick, dept) {
+  const panel = document.getElementById(containerId);
+  renderQuickBar(panel, onPick, dept);
+  const div = document.createElement('div');
+  panel.appendChild(div);
+  renderAlphaPanel(div, onPick, dept);
+}
+
+const CAN_DELETE_MS = 15 * 60 * 1000;
+
+function renderRecords() {
+  const list = load();
+  const box = document.getElementById('recordsBox');
+  const todayList = list.filter(r => r.date === today());
+  if (!todayList.length) { box.innerHTML = '<div class="empty">今天还没有报数记录</div>'; return; }
+  const now = Date.now();
+  let html = '<div class="table-scroll"><table><thead><tr><th>车间/部门</th><th>产品</th><th>客户</th><th>数量</th><th>备注</th><th>操作</th></tr></thead><tbody>';
+  todayList.slice().sort((a,b) => (b.ts||0)-(a.ts||0)).forEach(r => {
+    const deletable = (now - (r.ts||0)) <= CAN_DELETE_MS;
+    html += `<tr><td>${deptTag(r.dept)}</td><td>${r.product}${flowBadgeR(r)}</td><td>${custMini(r.customer)}</td><td><b>${r.qty}</b></td><td>${r.note ? `<span class="rec-note">📝 ${r.note}</span>` : '<span style="color:var(--muted);font-size:11px">—</span>'}</td><td>${deletable ? `<button class="btn-del" onclick="delReport('${r.id}')">🗑 删除</button>` : '<span style="color:var(--muted);font-size:11px">—</span>'}</td></tr>`;
+  });
+  box.innerHTML = html + '</tbody></table></div>';
+}
+
+function delReport(id) {
+  const list = load();
+  const rec = list.find(r => r.id === id);
+  if (!rec) return;
+  if (!confirm(`删除这条报数？\n${rec.dept} ${rec.product} ×${rec.qty}\n删除后可重新录入`)) return;
+  const idx = list.findIndex(r => r.id === id);
+  list.splice(idx, 1);
+  save(list);
+  renderRecords(); renderBoard(); renderHistory();
+  showToast('🗑 已删除，可重新录入');
+}
+
+/* ========== 出库 / 订单 面板（共用选产品 Picker） ========== */
+function loadKey(key, seedVal) {
+  const raw = localStorage.getItem(key);
+  if (!raw) { localStorage.setItem(key, JSON.stringify(seedVal)); return JSON.parse(JSON.stringify(seedVal)); }
+  try { const v = JSON.parse(raw); return Array.isArray(v) ? v : JSON.parse(JSON.stringify(seedVal)); } catch (e) { return JSON.parse(JSON.stringify(seedVal)); }
+}
+const saveKey = (key, list) => localStorage.setItem(key, JSON.stringify(list));
+const loadOut = () => loadKey(OUT_KEY, outSeed);
+const loadOrders = () => loadKey(ORDER_KEY, orderSeed);
+
+// 通用产品选择器：搜索选产品 + 按目录选择（双方式并存），实例各自独立 picked
+class Picker {
+  constructor(rootId, onPick) {
+    this.rootId = rootId;
+    this.onPick = onPick;
+    this.picked = null;
+    this.build();
+  }
+  build() {
+    const root = document.getElementById(this.rootId);
+    root.innerHTML = `
+      <label>方式一 · 搜索选产品 <span style="color:var(--muted);font-weight:400">（输入首字母 / 单词 / 中文名）</span></label>
+      <div class="search-wrap">
+        <input class="p-search" type="text" placeholder="🔍 例：RED、muffin、马卡龙、海绵…" autocomplete="off">
+        <div class="p-drop search-drop hidden"></div>
+      </div>
+      <div class="mode-divider">或按目录选择（字母索引 · 快捷推荐）</div>
+      <div class="p-catalog"></div>
+      <div class="p-pick pick-box hidden">
+        <span class="p-info pick-info"></span>
+        <button class="p-clear pick-clear" type="button">✕ 清除</button>
+      </div>`;
+    this.el = {
+      search: root.querySelector('.p-search'),
+      drop: root.querySelector('.p-drop'),
+      pickBox: root.querySelector('.p-pick'),
+      pickInfo: root.querySelector('.p-info'),
+    };
+    this.el.search.addEventListener('input', () => this.renderDrop(this.el.search.value.trim()));
+    this.el.search.addEventListener('focus', () => { if (this.el.search.value.trim()) this.renderDrop(this.el.search.value.trim()); });
+    this.el.search.addEventListener('keydown', (e) => { if (e.key === 'Escape') this.el.drop.classList.add('hidden'); });
+    this.el.drop.addEventListener('click', (e) => {
+      const item = e.target.closest('.s-item');
+      if (!item) return;
+      const p = PROD_INDEX[parseInt(item.dataset.idx, 10)];
+      this.el.search.value = '';
+      this.el.drop.classList.add('hidden');
+      this.setPicked(p);
+    });
+    document.addEventListener('click', (e) => {
+      if (!e.target.closest('#' + this.rootId)) this.el.drop.classList.add('hidden');
+    });
+    root.querySelector('.p-clear').addEventListener('click', () => this.clear());
+    // 快捷推荐 + 字母索引目录（点击直接 setPicked）
+    const catalog = root.querySelector('.p-catalog');
+    renderQuickBar(catalog, (p) => this.setPicked(p));
+    const alphaDiv = document.createElement('div');
+    catalog.appendChild(alphaDiv);
+    renderAlphaPanel(alphaDiv, (p) => this.setPicked(p));
+  }
+  renderDrop(q) {
+    const drop = this.el.drop;
+    if (!q) { drop.classList.add('hidden'); drop.innerHTML = ''; return; }
+    const res = searchProducts(q);
+    if (!res.length) {
+      drop.innerHTML = '<div class="s-empty">没有匹配的产品 😕</div>';
+      drop.classList.remove('hidden');
+      return;
+    }
+    const MAX = 12;
+    const shown = res.slice(0, MAX);
+    drop.innerHTML = shown.map(p => {
+      const c = DEPT_COLORS[p.dept] || '#888';
+      return `<div class="s-item" data-idx="${PROD_INDEX.indexOf(p)}">
+        <span class="dot" style="background:${c}"></span>
+        <span class="s-prod">${p.cat}</span>${p.spec ? `<span class="s-spec">${p.spec}</span>` : ''}
+        <span class="s-meta">${CUST_ICONS[p.cust] || ''} ${p.dept}</span>
+      </div>`;
+    }).join('') + (res.length > MAX ? `<div class="s-empty">还有 ${res.length - MAX} 个结果，继续输入缩小范围</div>` : '');
+    drop.classList.remove('hidden');
+  }
+  setPicked(p) {
+    this.picked = p;
+    recordPick(p);
+    if (!p) {
+      this.el.pickBox.classList.add('hidden');
+      this.el.pickInfo.innerHTML = '';
+      this.onPick(null);
+      return;
+    }
+    this.el.pickBox.classList.remove('hidden');
+    const c = DEPT_COLORS[p.dept] || '#888';
+    this.el.pickInfo.innerHTML = `<span class="dot" style="background:${c}"></span>${p.product} ${flowBadge(p)} <span style="color:var(--muted);font-size:12px;font-weight:400">· ${p.dept}</span>`;
+    this.onPick(p);
+  }
+  clear() { this.setPicked(null); this.el.search.value = ''; }
+}
+
+let outPicked = null;
+const outPicker = new Picker('outPicker', (p) => {
+  addToOutPick(p);
+});
+// 订单录入已移至办公室（订单看板只读日历）
+let orderPicked = null;
+
+// —— 出库批量列表（连续点击添加，一键出库） ——
+let outPickList = [];
+function addToOutPick(p) {
+  if (!p) return;
+  if (outPickList.some(x => x.p.product === p.product)) { showToast('已在出库列表：' + p.product); return; }
+  outPickList.push({ p, qty: '', note: '' });
+  renderOutPickList();
+}
+function removeOutPick(idx) { outPickList.splice(idx, 1); renderOutPickList(); }
+function setOutQty(idx, qty) { if (outPickList[idx]) outPickList[idx].qty = qty; renderOutPickTotal(); }
+function setOutNote(idx, note) { if (outPickList[idx]) outPickList[idx].note = note; }
+function renderOutPickList() {
+  const box = document.getElementById('outPickListBox');
+  const rows = document.getElementById('outPickRows');
+  const empty = document.getElementById('outPickEmpty');
+  if (!outPickList.length) { box.classList.add('hidden'); if (empty) empty.classList.remove('hidden'); return; }
+  box.classList.remove('hidden');
+  if (empty) empty.classList.add('hidden');
+  rows.innerHTML = outPickList.map((x, i) => {
+    const p = x.p;
+    const c = DEPT_COLORS[p.dept] || '#888';
+    return `<div class="pick-row">
+      <span class="dot" style="background:${c}"></span>
+      <span class="pr-name">${p.product} ${flowBadge(p)}<span class="pr-cust">${CUST_ICONS[p.cust] || '📦'} ${p.cust}</span></span>
+      <input class="pr-qty" type="number" min="0" value="${x.qty}" placeholder="数量" oninput="setOutQty(${i}, this.value)">
+      <input class="pr-note" type="text" value="${x.note || ''}" placeholder="备注…" oninput="setOutNote(${i}, this.value)">
+      <button class="pr-del" onclick="removeOutPick(${i})">✕</button>
+    </div>`;
+  }).join('');
+  renderOutPickTotal();
+}
+function renderOutPickTotal() {
+  const total = outPickList.reduce((s, x) => s + (parseInt(x.qty, 10) || 0), 0);
+  document.getElementById('outPickTotal').textContent = `共 ${outPickList.length} 个产品 · 合计 ${total} 件`;
+}
+function submitOutBatch() {
+  const valid = outPickList.filter(x => parseInt(x.qty, 10) > 0);
+  if (!valid.length) { showToast('请先填写数量'); return; }
+  const now = Date.now();
+  const list = loadOut();
+  valid.forEach((x, i) => {
+    list.push({ id: 'bo' + now + i, dept: x.p.dept, product: x.p.product, customer: x.p.cust, qty: parseInt(x.qty, 10), date: today(), ts: now - i * 1000, type: x.p.type, target: x.p.target, storage: x.p.storage, note: (x.note || '').trim() });
+  });
+  saveKey(OUT_KEY, list);
+  outPickList = [];
+  renderOutPickList();
+  renderOutRecords(); renderOutKpis(); renderBoard();
+  showToast(`✓ 已出库 ${valid.length} 个产品`);
+}
+
+// —— 出库 ——
+function renderOutKpis() {
+  const list = loadOut().filter(r => r.date === today());
+  document.getElementById('kOutTotal').textContent = list.reduce((s, r) => s + r.qty, 0);
+  document.getElementById('kOutCount').textContent = list.length + ' 笔';
+}
+function renderOutRecords() {
+  const list = loadOut();
+  const box = document.getElementById('outRecordsBox');
+  const todayList = list.filter(r => r.date === today());
+  if (!todayList.length) { box.innerHTML = '<div class="empty">今天还没有出库记录</div>'; return; }
+  const now = Date.now();
+  let html = '<div class="table-scroll"><table><thead><tr><th>车间/部门</th><th>产品</th><th>客户</th><th>数量</th><th>备注</th><th>操作</th></tr></thead><tbody>';
+  todayList.slice().sort((a, b) => (b.ts || 0) - (a.ts || 0)).forEach(r => {
+    const deletable = (now - (r.ts || 0)) <= CAN_DELETE_MS;
+    html += `<tr><td>${deptTag(r.dept)}</td><td>${r.product}${flowBadgeR(r)}</td><td>${custMini(r.customer)}</td><td><b>${r.qty}</b></td><td>${r.note ? `<span class="rec-note">📝 ${r.note}</span>` : '<span style="color:var(--muted);font-size:11px">—</span>'}</td><td>${deletable ? `<button class="btn-del" onclick="delOutbound('${r.id}')">🗑 删除</button>` : '<span style="color:var(--muted);font-size:11px">—</span>'}</td></tr>`;
+  });
+  box.innerHTML = html + '</tbody></table></div>';
+}
+function delOutbound(id) {
+  const list = loadOut();
+  const rec = list.find(r => r.id === id);
+  if (!rec) return;
+  if (!confirm(`删除这条出库？\n${rec.dept} ${rec.product} ×${rec.qty}\n删除后可重新登记`)) return;
+  const idx = list.findIndex(r => r.id === id);
+  list.splice(idx, 1);
+  saveKey(OUT_KEY, list);
+  renderOutRecords(); renderOutKpis(); renderBoard();
+  showToast('🗑 已删除，可重新登记');
+}
+function submitOutbound() {
+  // 旧单出库已由批量 submitOutBatch 替代
+  submitOutBatch();
+}
+
+// —— 订单看板（日历视图：全部进行中订单）——
+let calY = new Date().getFullYear();
+let calM = new Date().getMonth();
+const isActiveOrder = (o) => o.status === '待生产' || o.status === '生产中';
+function renderCal() {
+  const orders = loadOrders().filter(isActiveOrder);
+  const byDate = {};
+  orders.forEach(o => { (byDate[o.due] = byDate[o.due] || []).push(o); });
+  document.getElementById('kOrdCount').textContent = orders.length;
+  document.getElementById('kOrdQty').textContent = orders.reduce((s, o) => s + o.qty, 0);
+  document.getElementById('calTitle').textContent = `${calY}年${calM + 1}月`;
+  const startDow = new Date(calY, calM, 1).getDay();
+  const daysInMonth = new Date(calY, calM + 1, 0).getDate();
+  const todayStr = today();
+  let html = '';
+  for (let i = 0; i < startDow; i++) html += '<div class="cal-day empty"></div>';
+  for (let d = 1; d <= daysInMonth; d++) {
+    const ds = `${calY}-${String(calM + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+    const list = byDate[ds] || [];
+    const isToday = ds === todayStr;
+    const overdue = list.some(o => o.due < todayStr);
+    html += `<div class="cal-day${isToday ? ' today' : ''}${list.length ? ' has' : ''}${overdue ? ' over' : ''}" onclick="calOpenDay('${ds}')">
+      <span class="cal-num">${d}</span>
+      ${list.length ? `<span class="cal-badge">${list.length} 单${overdue ? ' 🔴' : ''}</span>` : ''}
+    </div>`;
+  }
+  document.getElementById('calGrid').innerHTML = html;
+}
+function calMonth(delta) {
+  calM += delta;
+  if (calM < 0) { calM = 11; calY--; }
+  if (calM > 11) { calM = 0; calY++; }
+  renderCal();
+}
+function calOpenDay(ds) {
+  const list = loadOrders().filter(o => o.due === ds && isActiveOrder(o));
+  document.getElementById('calModalTitle').textContent = `📅 ${ds} 订单（${list.length} 单）`;
+  const dstr = today();
+  document.getElementById('calModalBody').innerHTML = list.length ? list.map(o => {
+    const over = o.due < dstr ? '<span class="due-badge over">已超期</span>' : (o.due === dstr ? '<span class="due-badge today">今日到期</span>' : '');
+    return `<div class="cal-o">
+      <div class="cal-o-top"><b>${o.product}</b>${o.status === '待生产' ? '<span class="due-badge ok">待生产</span>' : '<span class="due-badge today">生产中</span>'}${over}</div>
+      <div class="cal-o-sub">📦 ${o.customer} · ×${o.qty}</div>
+      <div class="cal-o-sub">🏭 出货部门：${deptTag(o.dept)}${(o.involve || '') ? ` · <b style="color:var(--red)">${o.involve} 提供半成品</b>` : ''}</div>
+    </div>`;
+  }).join('') : '<div class="empty">当日无相关订单</div>';
+  document.getElementById('calModal').classList.remove('hidden');
+}
+function calClose() { document.getElementById('calModal').classList.add('hidden'); }
+function updateOrderStatus(id, status) {
+  const list = loadOrders();
+  const rec = list.find(r => r.id === id);
+  if (!rec) return;
+  rec.status = status;
+  saveKey(ORDER_KEY, list);
+  renderCal(); renderBoard();
+  if (status === '已完成') showToast('✓ 订单已完成');
+  else if (status === '已取消') showToast('🗑 订单已取消');
+}
+function delOrder(id) {
+  const list = loadOrders();
+  const rec = list.find(r => r.id === id);
+  if (!rec) return;
+  if (!confirm(`删除这条订单？\n${rec.product} ×${rec.qty} · ${rec.customer} · ${rec.due}`)) return;
+  const idx = list.findIndex(r => r.id === id);
+  list.splice(idx, 1);
+  saveKey(ORDER_KEY, list);
+  renderCal(); renderBoard();
+  showToast('🗑 订单已删除');
+}
+function submitOrder() {
+  // 订单录入已移至办公室（本看板只读日历）
+  showToast('ℹ 订单统一由办公室录入，本看板只读');
+}
+
+function submitReport() {
+  // 旧单提交已由批量 submitBatch 替代；保留兼容入口
+  submitBatch();
+}
+
+function showToast(msg, isWarn) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.style.background = isWarn ? 'var(--yellow)' : 'var(--green)';
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2200);
+}
+
+function renderBoard() {
+  const list = load().filter(r => r.date === today());
+  const total = list.reduce((s, r) => s + r.qty, 0);
+  const depts = new Set(list.map(r => r.dept)).size;
+  document.getElementById('kTotal').textContent = total;
+  document.getElementById('kDepts').textContent = depts + ' 个';
+
+  const byProduct = {};
+  list.forEach(r => {
+    const key = r.product + '|' + r.dept;
+    if (!byProduct[key]) byProduct[key] = { product: r.product, dept: r.dept, qty: 0, cust: r.customer };
+    byProduct[key].qty += r.qty;
+  });
+  const outByProduct = {};
+  loadOut().filter(r => r.date === today()).forEach(r => {
+    const key = r.product + '|' + r.dept;
+    outByProduct[key] = (outByProduct[key] || 0) + r.qty;
+  });
+  let hp = '<table><thead><tr><th>产品</th><th>客户</th><th>今日报数</th><th>今日出库</th></tr></thead><tbody>';
+  Object.values(byProduct).sort((a, b) => b.qty - a.qty).forEach(x => {
+    const outQ = outByProduct[x.product + '|' + x.dept] || 0;
+    hp += `<tr><td>${x.product}<div class="order-sub">${deptTag(x.dept)}</div></td><td>${custMini(x.cust)}</td><td><b>${x.qty}</b> 件</td><td>${outQ ? `<b style="color:var(--red)">${outQ}</b> 件` : '—'}</td></tr>`;
+  });
+  document.getElementById('byProduct').innerHTML = hp + '</tbody></table>';
+
+  const byDept = {};
+  list.forEach(r => byDept[r.dept] = (byDept[r.dept] || 0) + r.qty);
+  let hd = '<table><thead><tr><th>车间/部门</th><th>今日产量</th><th>占比</th></tr></thead><tbody>';
+  Object.entries(byDept).sort((a,b) => b[1]-a[1]).forEach(([d, q]) => {
+    const pct = total ? Math.round(q / total * 100) : 0;
+    hd += `<tr><td>${deptTag(d)}</td><td><b>${q}</b> 件</td><td>${pct}%</td></tr>`;
+  });
+  document.getElementById('byDept').innerHTML = hd + '</tbody></table>';
+
+  // 出库 + 订单（与出库/订单面板同源）
+  const outToday = loadOut().filter(r => r.date === today());
+  document.getElementById('kOut').textContent = outToday.reduce((s, r) => s + r.qty, 0) + ' 件';
+  const ordAll = loadOrders();
+  const ordActive = ordAll.filter(r => r.status === '待生产' || r.status === '生产中');
+  document.getElementById('kOrder').textContent = ordActive.length + ' 单';
+}
+
+// —— 历史记录（报数 / 出库 切换）——
+let curHist = 'report';
+function switchHist(t) {
+  curHist = t;
+  document.getElementById('histTabReport').classList.toggle('active', t === 'report');
+  document.getElementById('histTabOut').classList.toggle('active', t === 'out');
+  document.getElementById('histTitle').textContent = t === 'out' ? '历史出库记录' : '历史报数记录';
+  renderHistory();
+}
+function renderHistory() {
+  const src = curHist === 'out' ? loadOut() : load();
+  const box = document.getElementById('historyBox');
+  const hist = src.filter(r => r.date !== today());
+  if (!hist.length) { box.innerHTML = '<div class="empty">暂无历史记录</div>'; return; }
+  const byDate = {};
+  hist.forEach(r => { (byDate[r.date] = byDate[r.date] || []).push(r); });
+  const dates = Object.keys(byDate).sort().reverse();
+  let html = '';
+  dates.forEach(dt => {
+    const rows = byDate[dt].slice().sort((a,b) => a.dept.localeCompare(b.dept));
+    const subtotal = rows.reduce((s,r) => s + r.qty, 0);
+    html += `<div class="hist-group"><div class="hist-date">📅 ${dt} <span class="cnt">${rows.length} 笔 · ${subtotal} 件</span></div>`;
+    html += '<div class="table-scroll"><table><thead><tr><th>车间/部门</th><th>产品</th><th>客户</th><th>数量</th><th>备注</th></tr></thead><tbody>';
+    rows.forEach(r => {
+      html += `<tr><td>${deptTag(r.dept)}</td><td>${r.product}${flowBadgeR(r)}</td><td>${custMini(r.customer)}</td><td><b>${r.qty}</b></td><td>${r.note ? `<span class="rec-note">📝 ${r.note}</span>` : '<span style="color:var(--muted);font-size:11px">—</span>'}</td></tr>`;
+    });
+    html += '</tbody></table></div></div>';
+  });
+  box.innerHTML = html;
+}
+
+function resetDemo() {
+  // 已按用户要求移除 UI 入口（防止误操作）；函数保留供开发用
+  if (confirm('确定要重置演示数据吗？将清除所有已登记记录（报数 / 出库 / 订单）并恢复初始演示数据。')) {
+    localStorage.removeItem(KEY);
+    localStorage.removeItem(OUT_KEY);
+    localStorage.removeItem(ORDER_KEY);
+    location.reload();
+  }
+}
+
+const VIEW_TABS = { form: 'tabForm', board: 'tabBoard', out: 'tabOut', order: 'tabOrder', hist: 'tabHist' };
+function switchView(v) {
+  Object.entries(VIEW_TABS).forEach(([key, tabId]) => {
+    document.getElementById('view' + key.charAt(0).toUpperCase() + key.slice(1)).classList.toggle('hidden', key !== v);
+    document.getElementById(tabId).classList.toggle('active', key === v);
+  });
+  if (v === 'board') renderBoard();
+  if (v === 'hist') renderHistory();
+  if (v === 'out') { renderOutRecords(); renderOutKpis(); }
+  if (v === 'order') renderCal();
+}
+
+document.getElementById('deptLegend').innerHTML =
+  Object.entries(DEPT_COLORS).map(([n, c]) => `<span><span class="dot" style="background:${c}"></span>${n}</span>`).join('');
+
+renderDeptFilter();
+renderCatalog('catalogPanel', (p) => addToPick(p), curDept);
+renderRecords();
+renderOutKpis();
+renderOutRecords();
+renderCal();
+
+// 每 30 秒刷新一次：超过 15 分钟的出库自动取消删除按钮
+setInterval(() => { renderRecords(); renderOutRecords(); }, 30000);
+</script>
+</body>
+</html>

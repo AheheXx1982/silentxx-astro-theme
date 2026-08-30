@@ -1,0 +1,166 @@
+---
+// 2026-05-28: 移动优先设计 - 移动端垂直堆叠布局
+import type { TradeData } from '@lib/trading';
+
+interface Props {
+  stats: {
+    totalTrades: number;
+    closedTrades: number;
+    openTrades: number;
+    totalPnl: number;
+    winCount: number;
+    tickers: Map<string, number>;
+    strategies: Map<string, number>;
+  };
+  lang?: string;
+}
+
+const { stats, lang = 'zh' } = Astro.props;
+const isZh = lang === 'zh';
+const profitClass = stats.totalPnl >= 0 ? 'text-emerald-500' : 'text-red-500';
+const winRate = stats.closedTrades > 0 ? (stats.winCount / stats.closedTrades) * 100 : 0;
+
+// 排序后的 top tickers
+const topTickers = [...stats.tickers.entries()].sort((a, b) => b[1] - a[1]).slice(0, 5);
+
+const topStrategies = [...stats.strategies.entries()].sort((a, b) => b[1] - a[1]).slice(0, 5);
+---
+
+<div class="mb-8">
+  <!-- 移动端：卡片堆叠布局，每个卡片都是全屏宽度 -->
+  <div class="flex flex-col gap-3 sm:grid sm:grid-cols-2 sm:gap-3 lg:grid-cols-4">
+    <!-- 总交易笔数 -->
+    <div
+      class="border-border/50 bg-card dark:bg-card w-full overflow-hidden rounded-2xl border p-4 transition-shadow hover:shadow-md"
+    >
+      <div class="flex items-center gap-3">
+        <div class="bg-primary/10 flex h-11 w-11 shrink-0 items-center justify-center rounded-xl">
+          <svg
+            class="text-primary h-6 w-6"
+            xmlns="http://www.w3.org/2000/svg"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline></svg
+          >
+        </div>
+        <div class="min-w-0 flex-1">
+          <div class="text-muted-foreground text-xs">{isZh ? '总交易' : 'Total Trades'}</div>
+          <div class="text-2xl font-bold tabular-nums">{stats.totalTrades}</div>
+        </div>
+      </div>
+      <div class="mt-3 flex gap-3 text-sm">
+        <span class="text-emerald-500">{stats.closedTrades} {isZh ? '已平仓' : 'Closed'}</span>
+        <span class="text-blue-500">{stats.openTrades} {isZh ? '持仓中' : 'Open'}</span>
+      </div>
+    </div>
+
+    <!-- 活跃标的 -->
+    <div
+      class="border-border/50 bg-card dark:bg-card w-full overflow-hidden rounded-2xl border p-4 transition-shadow hover:shadow-md"
+    >
+      <div class="flex items-center gap-3">
+        <div class="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-amber-100 dark:bg-amber-900/30">
+          <svg
+            class="h-6 w-6 text-amber-600 dark:text-amber-400"
+            xmlns="http://www.w3.org/2000/svg"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            ><rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"
+            ></path></svg
+          >
+        </div>
+        <div class="min-w-0 flex-1">
+          <div class="text-muted-foreground text-xs">{isZh ? '活跃标的' : 'Active Tickers'}</div>
+          <div class="truncate text-lg font-bold">
+            {
+              topTickers.length > 0
+                ? topTickers
+                    .slice(0, 2)
+                    .map(([t]) => `$${t}`)
+                    .join(' · ')
+                : '—'
+            }
+          </div>
+        </div>
+      </div>
+      <div class="mt-3 flex flex-wrap gap-1.5 text-sm">
+        {
+          topStrategies
+            .slice(0, 2)
+            .map(([s]) => <span class="bg-muted text-muted-foreground max-w-full truncate rounded px-2 py-1">{s}</span>)
+        }
+      </div>
+    </div>
+
+    <!-- 累计盈亏 -->
+    <div
+      class="border-border/50 bg-card dark:bg-card w-full overflow-hidden rounded-2xl border p-4 transition-shadow hover:shadow-md"
+    >
+      <div class="flex items-center gap-3">
+        <div
+          class={`flex h-11 w-11 shrink-0 items-center justify-center rounded-xl ${stats.totalPnl >= 0 ? 'bg-emerald-100 dark:bg-emerald-900/30' : 'bg-red-100 dark:bg-red-900/30'}`}
+        >
+          <svg
+            class={`h-6 w-6 ${stats.totalPnl >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-600 dark:text-red-400'}`}
+            xmlns="http://www.w3.org/2000/svg"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            ><line x1="12" y1="1" x2="12" y2="23"></line><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"
+            ></path></svg
+          >
+        </div>
+        <div class="min-w-0 flex-1">
+          <div class="text-muted-foreground text-xs">{isZh ? '累计盈亏' : 'Total P&L'}</div>
+          <div class={`text-2xl font-bold tabular-nums truncate break-all ${profitClass}`}>
+            {stats.totalPnl >= 0 ? '+' : ''}${stats.totalPnl.toLocaleString()}
+          </div>
+        </div>
+      </div>
+      <div class={`mt-3 text-sm ${profitClass}`}>
+        {stats.totalPnl >= 0 ? (isZh ? '正收益' : 'Positive') : isZh ? '负收益' : 'Negative'}
+      </div>
+    </div>
+
+    <!-- 胜率 -->
+    <div
+      class="border-border/50 bg-card dark:bg-card w-full overflow-hidden rounded-2xl border p-4 transition-shadow hover:shadow-md"
+    >
+      <div class="flex items-center gap-3">
+        <div class="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-emerald-100 dark:bg-emerald-900/30">
+          <svg
+            class="h-6 w-6 text-emerald-600 dark:text-emerald-400"
+            xmlns="http://www.w3.org/2000/svg"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            ><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg
+          >
+        </div>
+        <div class="min-w-0 flex-1">
+          <div class="text-muted-foreground text-xs">{isZh ? '胜率' : 'Win Rate'}</div>
+          <div class="text-2xl font-bold tabular-nums">
+            {winRate.toFixed(1)}<span class="text-muted-foreground text-sm font-normal">%</span>
+          </div>
+        </div>
+      </div>
+      <div class="text-muted-foreground mt-3 text-sm">
+        {stats.winCount}/{stats.closedTrades}
+        {isZh ? '笔盈利' : 'wins'}
+      </div>
+    </div>
+  </div>
+</div>

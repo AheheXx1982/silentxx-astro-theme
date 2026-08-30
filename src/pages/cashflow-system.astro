@@ -1,0 +1,113 @@
+---
+import Layout from '@layouts/Layout.astro';
+import TwoColumnLayout from '@layouts/TwoColumnLayout.astro';
+import Cover from '@components/ui/cover/Cover.astro';
+import HomeSider from '@components/layout/HomeSider.astro';
+import QuoteMarquee from '@components/fun/QuoteMarquee.astro';
+import { getAllPosts } from '@lib/content';
+import type { CollectionEntry } from 'astro:content';
+import { getSeoConfig } from '@lib/i18n';
+
+const lang = 'zh';
+const seoConfig = getSeoConfig('zh');
+
+async function getCategoryPosts(lang: string): Promise<CollectionEntry<'blog'>[]> {
+  const posts = await getAllPosts();
+  const filtered = posts.filter((post) => {
+    const postLang = post.data.lang || 'zh';
+    if (postLang !== lang) return false;
+    const cats = post.data.categories;
+    if (!cats || !Array.isArray(cats)) return false;
+    const flatCats = cats.flat(Infinity).map((c: unknown) => String(c));
+    return flatCats.includes('稳定现金流系统');
+  });
+  filtered.sort((a, b) => new Date(b.data.date).getTime() - new Date(a.data.date).getTime());
+  return filtered;
+}
+
+const posts = await getCategoryPosts(lang);
+---
+
+<Layout title={`现金流系统 | ${seoConfig.title}`} description="构建属于自己的期权现金流机器——从系统框架到策略轮动，从风险控制到回撤管理，打造每月稳定的被动收入。">
+  <TwoColumnLayout>
+    <Cover slot="cover" title="现金流系统" />
+    <HomeSider slot="sider" lang={lang} />
+    <QuoteMarquee />
+
+    <div class="shadow-box bg-gradient-start mx-0 flex w-full flex-col px-6 py-4 md:px-3 md:py-2">
+      <div class="mb-8 border-l-4 border-emerald-500 bg-emerald-50 dark:bg-emerald-950/30 px-6 py-4 rounded-r-lg">
+        <h2 class="text-2xl font-bold text-emerald-600 dark:text-emerald-400 mb-3">💧 现金流系统</h2>
+        <p class="text-muted-foreground leading-relaxed">
+          做期权不是为了赌一次暴富，而是造一台能持续产生现金流的机器。这里不讨论"哪只股票会涨"，只讨论"如何让每月都有美金入账"——系统框架、策略轮动、风险预算、回撤控制。
+        </p>
+      </div>
+
+      <div class="mb-6">
+        <h3 class="text-xl font-bold mb-4 flex items-center gap-2">
+          <span class="inline-block w-1 h-6 bg-gradient-to-b from-emerald-500 to-teal-500 rounded"></span>
+          全部文章
+        </h3>
+        {
+          posts.length > 0 ? (
+            <div class="grid gap-4 md:grid-cols-1">
+              {posts.map((post) => (
+                <a
+                  href={`/article/${post.data.link ?? (typeof post.slug === 'string' ? post.slug.split('/').pop() || post.slug : String(post.slug))}`}
+                  class="group block bg-card border border-border rounded-lg p-5 transition-all duration-300 hover:shadow-lg hover:scale-[1.02] hover:border-primary/30"
+                >
+                  <div class="flex items-start gap-4">
+                    <div class="flex-shrink-0 w-12 h-12 bg-gradient-to-br from-emerald-500 to-teal-500 rounded-lg flex items-center justify-center text-white font-bold text-lg">
+                      <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+                    </div>
+                    <div class="flex-1 min-w-0">
+                      <h4 class="text-lg font-semibold text-primary group-hover:text-emerald-600 dark:group-hover:text-emerald-400 mb-2 transition-colors">
+                        {post.data.title}
+                      </h4>
+                      <p class="text-sm text-muted-foreground line-clamp-2 mb-2">
+                        {post.data.description || ''}
+                      </p>
+                      <div class="flex items-center gap-4 text-xs text-muted-foreground">
+                        <span>📅 {new Date(post.data.date).toLocaleDateString('zh-CN')}</span>
+                        {post.data.tags && post.data.tags.length > 0 && (
+                          <div class="flex gap-1">
+                            {post.data.tags.slice(0, 3).map((tag: string) => (
+                              <span class="px-2 py-0.5 bg-primary/10 rounded-full">#{tag}</span>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                </a>
+              ))}
+            </div>
+          ) : (
+            <div class="text-center py-16 text-muted-foreground">
+              <div class="text-4xl mb-3">💧</div>
+              <p class="text-lg font-semibold">内容正在建设中</p>
+              <p class="text-sm mt-1">现金流系统文章即将陆续上线</p>
+            </div>
+          )
+        }
+      </div>
+
+      <div class="mt-8 grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div class="bg-gradient-to-br from-emerald-50 to-emerald-100 dark:from-emerald-950/30 dark:to-emerald-900/20 rounded-lg p-4">
+          <div class="text-3xl mb-2">🏗️</div>
+          <h4 class="font-semibold mb-1 text-emerald-900 dark:text-emerald-300">系统框架</h4>
+          <p class="text-sm text-muted-foreground">从零搭建现金流机器</p>
+        </div>
+        <div class="bg-gradient-to-br from-teal-50 to-teal-100 dark:from-teal-950/30 dark:to-teal-900/20 rounded-lg p-4">
+          <div class="text-3xl mb-2">🔄</div>
+          <h4 class="font-semibold mb-1 text-teal-900 dark:text-teal-300">策略轮动</h4>
+          <p class="text-sm text-muted-foreground">CSP → CC → 无限循环</p>
+        </div>
+        <div class="bg-gradient-to-br from-cyan-50 to-cyan-100 dark:from-cyan-950/30 dark:to-cyan-900/20 rounded-lg p-4">
+          <div class="text-3xl mb-2">🛡️</div>
+          <h4 class="font-semibold mb-1 text-cyan-900 dark:text-cyan-300">风控优先</h4>
+          <p class="text-sm text-muted-foreground">回撤可控才能长期复利</p>
+        </div>
+      </div>
+    </div>
+  </TwoColumnLayout>
+</Layout>

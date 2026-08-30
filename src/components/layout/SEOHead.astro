@@ -1,0 +1,112 @@
+---
+// SEO Head component — JSON-LD structured data + enhanced meta
+// Usage: <SEOHead title="..." description="..." type="website" />
+import { getSeoConfig, getSiteConfig } from '@lib/i18n';
+import { getLanguageFromAstroUrl } from '@lib/i18n';
+
+interface Props {
+  title: string;
+  description?: string;
+  type?: 'website' | 'article' | 'webapp';
+  image?: string;
+  publishedDate?: Date;
+  modifiedDate?: Date;
+  tags?: string[];
+  author?: string;
+}
+
+const currentLang = getLanguageFromAstroUrl(Astro.url);
+const seo = getSeoConfig(currentLang);
+const site = getSiteConfig(currentLang);
+
+const {
+  title = seo.title,
+  description = seo.description,
+  type = 'website',
+  image = '/img/SilentXx.webp',
+  publishedDate,
+  modifiedDate,
+  tags = [],
+  author = site.author,
+} = Astro.props;
+
+const canonicalUrl = new URL(Astro.url.pathname, Astro.site).href;
+const ogImage = image.startsWith('http') ? image : new URL(image, Astro.site).href;
+---
+
+<!-- Enhanced Meta -->
+<meta name="description" content={description} />
+<meta name="author" content={author} />
+<meta name="keywords" content={[seo.keywords, ...tags].join(', ')} />
+<link rel="canonical" href={canonicalUrl} />
+
+<!-- Open Graph -->
+<meta property="og:type" content={type} />
+<meta property="og:site_name" content={site.alternate || site.title} />
+<meta property="og:url" content={canonicalUrl} />
+<meta property="og:title" content={title} />
+<meta property="og:description" content={description} />
+<meta property="og:image" content={ogImage} />
+<meta property="og:image:width" content="1200" />
+<meta property="og:image:height" content="630" />
+<meta property="og:locale" content={currentLang === 'en' ? 'en_US' : 'zh_CN'} />
+
+<!-- Twitter Card -->
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:url" content={canonicalUrl} />
+<meta name="twitter:title" content={title} />
+<meta name="twitter:description" content={description} />
+<meta name="twitter:image" content={ogImage} />
+
+<!-- JSON-LD Structured Data -->
+<script type="application/ld+json" set:html={JSON.stringify({
+  '@context': 'https://schema.org',
+  '@type': type === 'article' ? 'Article' : type === 'webapp' ? 'WebApplication' : 'WebSite',
+  ...(type === 'website' ? {
+    name: site.title,
+    alternateName: site.alternate,
+    url: new URL('/', Astro.site).href,
+    description: seo.description,
+    author: {
+      '@type': 'Person',
+      name: author,
+      url: new URL('/about', Astro.site).href,
+    },
+    inLanguage: currentLang === 'en' ? 'en' : 'zh-CN',
+  } : {}),
+  ...(type === 'article' ? {
+    headline: title,
+    description: description,
+    image: ogImage,
+    datePublished: publishedDate?.toISOString(),
+    dateModified: modifiedDate?.toISOString() || publishedDate?.toISOString(),
+    author: {
+      '@type': 'Person',
+      name: author,
+    },
+    publisher: {
+      '@type': 'Organization',
+      name: site.title,
+      logo: {
+        '@type': 'ImageObject',
+        url: new URL('/img/SilentXx.webp', Astro.site).href,
+      },
+    },
+    keywords: tags.join(', '),
+  } : {}),
+  ...(type === 'webapp' ? {
+    name: title,
+    description: description,
+    applicationCategory: 'FinanceApplication',
+    operatingSystem: 'Web',
+    offers: {
+      '@type': 'Offer',
+      price: '0',
+      priceCurrency: 'USD',
+    },
+    author: {
+      '@type': 'Person',
+      name: author,
+    },
+  } : {}),
+})} />

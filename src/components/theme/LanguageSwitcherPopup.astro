@@ -1,0 +1,123 @@
+---
+import { Icon } from 'astro-icon/components';
+import { LANGUAGES, type Language } from '../../constants/i18n';
+import { getLanguageFromAstroUrl } from '../../lib/i18n';
+
+// 获取当前语言
+const currentLang = getLanguageFromAstroUrl(Astro.url);
+const currentPath = Astro.url.pathname;
+
+// 生成语言切换链接
+function getLanguageSwitchUrl(targetLang: Language): string {
+  if (currentLang === 'zh' && targetLang === 'en') {
+    // 从中文切换到英文
+    if (currentPath === '/') {
+      return '/en';
+    }
+    return `/en${currentPath}`;
+  } else if (currentLang === 'en' && targetLang === 'zh') {
+    // 从英文切换到中文
+    return currentPath.replace(/^\/en/, '') || '/';
+  }
+  return currentPath;
+}
+
+const otherLanguages = Object.keys(LANGUAGES).filter((lang) => lang !== currentLang) as Language[];
+---
+
+<div class="language-switcher-popup">
+  <div class="py-1">
+    {
+      otherLanguages.map((lang) => (
+        <a
+          href={getLanguageSwitchUrl(lang)}
+          class="flex items-center px-3 py-2 text-sm text-gray-700 transition-colors duration-200 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700"
+          aria-label={`切换到${LANGUAGES[lang]}`}
+        >
+          <div class="flex items-center space-x-2">
+            <span class="text-base">{lang === 'zh' ? '🇨🇳' : '🇺🇸'}</span>
+            <span class="font-medium">{LANGUAGES[lang]}</span>
+          </div>
+        </a>
+      ))
+    }
+
+    <!-- 当前语言显示 -->
+    <div class="flex items-center bg-blue-50 px-3 py-2 text-sm text-blue-600 dark:bg-blue-900/20 dark:text-blue-400">
+      <div class="flex items-center space-x-2">
+        <span class="text-base">
+          {currentLang === 'zh' ? '🇨🇳' : '🇺🇸'}
+        </span>
+        <span class="font-medium">{LANGUAGES[currentLang]}</span>
+        <Icon name="ri:check-line" class="ml-auto h-4 w-4" />
+      </div>
+    </div>
+  </div>
+</div>
+
+<style is:global>
+  .language-switcher-popup {
+    width: 100%;
+  }
+  
+  @media (max-width: 768px) {
+    .language-switcher-popup {
+      width: 160px;
+    }
+  }
+</style>
+
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+    const switcher = document.querySelector('.language-switcher') as HTMLElement;
+    const toggle = switcher?.querySelector('.language-toggle') as HTMLElement;
+    const dropdown = switcher?.querySelector('.language-dropdown') as HTMLElement;
+
+    if (!switcher || !toggle || !dropdown) return;
+
+    let timeout: number;
+
+    // 鼠标进入时显示下拉菜单
+    switcher.addEventListener('mouseenter', () => {
+      clearTimeout(timeout);
+      dropdown.style.opacity = '1';
+      dropdown.style.visibility = 'visible';
+      dropdown.style.transform = 'scale(1)';
+    });
+
+    // 鼠标离开时隐藏下拉菜单
+    switcher.addEventListener('mouseleave', () => {
+      timeout = window.setTimeout(() => {
+        dropdown.style.opacity = '0';
+        dropdown.style.visibility = 'hidden';
+        dropdown.style.transform = 'scale(0.95)';
+      }, 150);
+    });
+
+    // 键盘导航支持
+    toggle.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        const isVisible = dropdown.style.opacity === '1';
+        if (isVisible) {
+          dropdown.style.opacity = '0';
+          dropdown.style.visibility = 'hidden';
+          dropdown.style.transform = 'scale(0.95)';
+        } else {
+          dropdown.style.opacity = '1';
+          dropdown.style.visibility = 'visible';
+          dropdown.style.transform = 'scale(1)';
+        }
+      }
+    });
+
+    // 点击外部区域关闭下拉菜单
+    document.addEventListener('click', (e) => {
+      if (!switcher.contains(e.target as Node)) {
+        dropdown.style.opacity = '0';
+        dropdown.style.visibility = 'hidden';
+        dropdown.style.transform = 'scale(0.95)';
+      }
+    });
+  });
+</script>

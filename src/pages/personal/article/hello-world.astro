@@ -1,0 +1,103 @@
+---
+import PersonalLayout from '@layouts/PersonalLayout.astro';
+const title = '你好，这里是问心';
+const description = '从骆驼祥子到问心剑——一个关于成长、投资与自我认知的故事。';
+---
+
+<PersonalLayout title={title} description={description}>
+
+  <article class="max-w-2xl mx-auto space-y-6 text-stone-700 leading-relaxed">
+
+    <header class="space-y-4 pb-8 border-b border-stone-200">
+      <time class="text-sm text-stone-400">2026年7月26日</time>
+      <h1 class="text-3xl font-serif text-stone-800">{title}</h1>
+      <p class="text-stone-500">{description}</p>
+    </header>
+
+    <p>
+      你好，我是问心剑。
+    </p>
+
+    <p>
+      如果你是从 <a href="https://silentxx.com" class="text-amber-600 hover:underline">SilentXx</a> 过来的，你可能已经知道我在期权交易和现金流系统方面的一些想法。
+      但那个主站太"正"了——策略、数据、风险控制、回测。
+    </p>
+
+    <p>
+      我需要一个地方，可以写得轻松一点。
+    </p>
+
+    <p>
+      不是每一篇文章都要有 Silent's Note。
+      不是每一段文字都要有 Delta 和 Theta。
+    </p>
+
+    <section>
+      <h2 class="text-xl font-serif text-stone-800 mt-8 mb-4">关于笔名</h2>
+
+      <p>
+        以前在别的地方写东西，用的笔名叫 <strong>骆驼祥子</strong>。
+        那是我二十出头时起的名字——带点文艺，带点理想主义，也带点对老舍笔下那个时代的遥想。
+      </p>
+
+      <p>
+        后来不写了。不是因为不想写，是因为交易和创业把时间和心力都占满了。
+        每天盯着屏幕上的 K 线、Greeks、保证金，脑子里全是数字，没有空间留给文字。
+      </p>
+
+      <p>
+        但文字这东西很奇怪——你冷落它十年，它在某个深夜还是会回来敲你的门。
+      </p>
+    </section>
+
+    <section>
+      <h2 class="text-xl font-serif text-stone-800 mt-8 mb-4">为什么要换笔名</h2>
+
+      <p>
+        "骆驼祥子"很好，但它是二十岁的我。
+      </p>
+
+      <p>
+        现在的我，不再觉得人生是拉车——低着头在街上走，等着命运的安排。
+        我更觉得人生是练剑——在房间里反复磨，然后在关键时刻，挥出那一剑。
+      </p>
+
+      <p>
+        做交易这几年的经历让我深刻体会到一件事：<strong>市场不会告诉你答案，它只会反复拷问你的内心。</strong>
+        每一次开仓，每一次止损，每一次看着浮动亏损睡不着觉——都是在"问心"。
+      </p>
+
+      <p>
+        问心，然后出剑。这不仅是交易的心法，也是我理解人生的一种方式。
+      </p>
+    </section>
+
+    <section>
+      <h2 class="text-xl font-serif text-stone-800 mt-8 mb-4">这个角落会写什么</h2>
+
+      <p>
+        没有固定栏目。可能是：
+      </p>
+
+      <ul class="list-disc list-inside space-y-1 text-stone-600 ml-2">
+        <li>某次交易后的心理复盘（不是策略复盘——那个在主站）</li>
+        <li>用 AI 辅助写作的一些心得</li>
+        <li>读了一本书之后的想法</li>
+        <li>某天晚上散步时突然想到的一句话</li>
+        <li>一张拍了很久才找到角度拍好的照片</li>
+      </ul>
+
+      <p>这里不是博客，是一个人的笔记。</p>
+    </section>
+
+    <footer class="pt-8 mt-8 border-t border-stone-200 text-sm text-stone-400 space-y-2">
+      <p>感谢你看到这里。</p>
+      <p>如果你想看更"正经"的内容，<a href="https://silentxx.com" class="text-amber-600 hover:underline">回到 SilentXx 主站 →</a></p>
+      <p class="mt-4 text-xs">
+        曾用笔名：骆驼祥子。如今更喜欢"问心剑"，因为投资也好，人生也好，终究都是先问心，再出剑。
+      </p>
+    </footer>
+
+  </article>
+
+</PersonalLayout>

@@ -1,0 +1,455 @@
+---
+import HomeSider from '@components/layout/HomeSider.astro';
+import Cover from '@components/ui/cover/Cover.astro';
+import { getSeoConfig, getUIText } from '@lib/i18n';
+import Layout from '@layouts/Layout.astro';
+import TwoColumnLayout from '@layouts/TwoColumnLayout.astro';
+import { getAllTags, getSortedPosts } from '@lib/content';
+import QuoteMarquee from '@components/fun/QuoteMarquee.astro';
+
+const TAG_COLORS = [
+  'from-blue-400/10 to-indigo-300/10 hover:from-blue-400/80 hover:to-indigo-300/80 text-blue-400/70 hover:text-blue-50',
+  'from-pink-300/10 to-rose-200/10 hover:from-pink-300/80 hover:to-rose-200/80 text-pink-400/70 hover:text-pink-50',
+  'from-violet-400/10 to-purple-300/10 hover:from-violet-400/80 hover:to-purple-300/80 text-violet-400/70 hover:text-violet-50',
+  'from-sky-400/10 to-blue-300/10 hover:from-sky-400/80 hover:to-blue-300/80 text-sky-400/70 hover:text-sky-50',
+];
+
+const posts = await getSortedPosts('zh', true);
+const seoConfig = getSeoConfig('zh');
+const uiText = getUIText('zh');
+const tags = getAllTags(posts);
+const sortedTags = Object.entries(tags)
+  .sort(([, a], [, b]) => b - a)
+  .map(([tag, count]) => ({ tag, count }));
+
+// 构建标签共现图：同篇文章中的标签两两相连
+type GraphNode = { id: string; count: number; links: Set<string> };
+const graphMap = new Map<string, GraphNode>();
+
+for (const post of posts) {
+  const postTags = (post.data.tags || []).map((t: string) => String(t));
+  if (postTags.length < 2) {
+    postTags.forEach((t) => {
+      if (!graphMap.has(t)) graphMap.set(t, { id: t, count: 0, links: new Set() });
+    });
+    continue;
+  }
+  postTags.forEach((t) => {
+    if (!graphMap.has(t)) graphMap.set(t, { id: t, count: 0, links: new Set() });
+    graphMap.get(t)!.count++;
+  });
+  for (let i = 0; i < postTags.length; i++) {
+    for (let j = i + 1; j < postTags.length; j++) {
+      const a = graphMap.get(postTags[i])!;
+      const b = graphMap.get(postTags[j])!;
+      a.links.add(postTags[j]);
+      b.links.add(postTags[i]);
+    }
+  }
+}
+
+const graphNodes = Array.from(graphMap.values());
+const graphEdges: Array<{ source: string; target: string }> = [];
+graphNodes.forEach((n) => {
+  n.links.forEach((target) => {
+    if (n.id < target) graphEdges.push({ source: n.id, target });
+  });
+});
+
+// 序列化给前端（避免复杂对象传递）
+const graphData = {
+  nodes: graphNodes.map((n) => ({ id: n.id, count: n.count })),
+  edges: graphEdges,
+};
+const graphDataJson = JSON.stringify(graphData).replace(/</g, '\\u003c');
+---
+
+<Layout title={`${uiText.tags} | ${seoConfig.title}`} description={uiText.tagsDescription}>
+  <TwoColumnLayout>
+    <Cover slot="cover" title={uiText.allTags} />
+    <HomeSider slot="sider" lang="zh" />
+    <QuoteMarquee />
+    <div class="shadow-box bg-gradient-start mx-0 flex w-full flex-col px-6 py-4 md:px-3 md:py-2">
+      <h2 class="shoka-decoration-circle group relative h-19 px-7.5 py-5 text-2xl/9 font-bold">
+        <a href="/" class="dashed-border text-muted-foreground group-hover:border-blue group-hover:text-blue border-b"
+          >{uiText.home}</a
+        >
+        <span class="text-muted-foreground text-lg"> / </span>
+        {uiText.totalTagsCount}
+        {sortedTags.length}
+        {uiText.tagsUnit}
+      </h2>
+
+      <div class="mb-4 flex items-center gap-2 px-4">
+        <button
+          id="view-graph"
+          class="rounded-lg bg-linear-to-r from-sky-400/80 to-blue-400/80 px-4 py-1.5 text-sm text-white transition-all hover:shadow-md"
+        >
+          关系图谱
+        </button>
+        <button
+          id="view-cloud"
+          class="rounded-lg border border-gray-300 px-4 py-1.5 text-sm text-gray-500 transition-all hover:border-sky-400 hover:text-sky-500"
+        >
+          标签云
+        </button>
+      </div>
+
+      {/* 关系图谱视图（Obsidian 风格：滚轮缩放 + 拖拽平移 + 持续动效） */}
+      <div
+        id="graph-view"
+        class="relative h-[600px] w-full overflow-hidden rounded-xl border border-gray-200/60 bg-white"
+        data-graph={graphDataJson}
+      >
+        <svg id="graph-svg" class="h-full w-full"></svg>
+        <div
+          id="graph-tooltip"
+          class="pointer-events-none absolute top-0 left-0 z-10 hidden rounded-lg bg-gray-900/90 px-3 py-1.5 text-xs text-white shadow-lg"
+        >
+        </div>
+      </div>
+
+      {/* 标签云视图（多彩色） */}
+      <div id="cloud-view" class="flex hidden flex-wrap gap-3 p-4">
+        {
+          sortedTags.map(({ tag, count }, index) => (
+            <div class="group relative">
+              {/* 防止闪烁 */}
+              <a
+                href={`/tags/${tag.replace(/\//g, '-')}`}
+                class={`group relative flex items-center rounded-lg bg-linear-to-r px-3 py-1.5 text-sm transition-all duration-300 group-hover:-translate-y-0.5 group-hover:shadow-lg ${
+                  TAG_COLORS[index % TAG_COLORS.length]
+                }`}
+              >
+                <span class="font-medium">{tag}</span>
+                <span class="ml-1.5 truncate rounded-full bg-white/10 px-1.5 text-xs">{count}</span>
+              </a>
+            </div>
+          ))
+        }
+      </div>
+    </div>
+  </TwoColumnLayout>
+</Layout>
+
+<script is:inline>
+  (() => {
+    const graphView = document.getElementById('graph-view');
+    const graphData = graphView ? JSON.parse(graphView.dataset.graph || '{"nodes":[],"edges":[]}') : { nodes: [], edges: [] };
+    const svg = document.getElementById('graph-svg');
+    const tooltip = document.getElementById('graph-tooltip');
+    const cloudView = document.getElementById('cloud-view');
+    const btnGraph = document.getElementById('view-graph');
+    const btnCloud = document.getElementById('view-cloud');
+    if (!svg || !graphView || !cloudView || !btnGraph || !btnCloud) return;
+
+    btnGraph.addEventListener('click', () => {
+      graphView.classList.remove('hidden');
+      cloudView.classList.add('hidden');
+      btnGraph.classList.add('bg-linear-to-r', 'from-sky-400/80', 'to-blue-400/80', 'text-white');
+      btnGraph.classList.remove('border', 'border-gray-300', 'text-gray-500');
+      btnCloud.classList.remove('bg-linear-to-r', 'from-sky-400/80', 'to-blue-400/80', 'text-white');
+      btnCloud.classList.add('border', 'border-gray-300', 'text-gray-500');
+      initGraph();
+    });
+    btnCloud.addEventListener('click', () => {
+      graphView.classList.add('hidden');
+      cloudView.classList.remove('hidden');
+      btnCloud.classList.add('bg-linear-to-r', 'from-sky-400/80', 'to-blue-400/80', 'text-white');
+      btnCloud.classList.remove('border', 'border-gray-300', 'text-gray-500');
+      btnGraph.classList.remove('bg-linear-to-r', 'from-sky-400/80', 'to-blue-400/80', 'text-white');
+      btnGraph.classList.add('border', 'border-gray-300', 'text-gray-500');
+    });
+
+    let initialized = false;
+    function initGraph() {
+      if (initialized) return;
+      initialized = true;
+      const W = graphView.clientWidth || 800;
+      const H = graphView.clientHeight || 600;
+      const NS = 'http://www.w3.org/2000/svg';
+
+      // 节点：id -> {x, y, vx, vy, r, count}
+      const nodes = graphData.nodes.map((n) => ({
+        id: n.id,
+        count: n.count,
+        x: W / 2 + (Math.random() - 0.5) * W * 0.35,
+        y: H / 2 + (Math.random() - 0.5) * H * 0.35,
+        vx: 0,
+        vy: 0,
+        r: Math.max(2.5, Math.min(9, 2.5 + Math.sqrt(n.count) * 1.6)),
+      }));
+      const nodeById = new Map(nodes.map((n) => [n.id, n]));
+
+      // 边
+      const edges = graphData.edges
+        .map((e) => ({ source: nodeById.get(e.source), target: nodeById.get(e.target) }))
+        .filter((e) => e.source && e.target);
+
+      // 力导向模拟（斥力 + 弹簧 + 中心引力，参数调慢保证平滑）
+      const REPULSION = 1600;
+      const SPRING_K = 0.004;
+      const CENTER_K = 0.02;
+      const DAMPING = 0.88;
+      const DRIFT = 0.006; // 持续微动幅度：极轻微呼吸感，避免乱跳
+      const MAX_SPEED = 0.5; // 速度上限：防止节点震荡失控
+      const LABEL_GAP = 6; // 标签与圆点底部的恒定屏幕间距(px)，标签固定字号不随缩放
+
+      function step() {
+        // 斥力
+        for (let i = 0; i < nodes.length; i++) {
+          for (let j = i + 1; j < nodes.length; j++) {
+            const a = nodes[i],
+              b = nodes[j];
+            let dx = b.x - a.x,
+              dy = b.y - a.y;
+            let dist = Math.sqrt(dx * dx + dy * dy) || 1;
+            const force = REPULSION / (dist * dist);
+            dx /= dist;
+            dy /= dist;
+            a.vx -= dx * force * 0.5;
+            a.vy -= dy * force * 0.5;
+            b.vx += dx * force * 0.5;
+            b.vy += dy * force * 0.5;
+          }
+        }
+        // 弹簧（边）
+        for (const e of edges) {
+          const a = e.source,
+            b = e.target;
+          const dx = b.x - a.x,
+            dy = b.y - a.y;
+          const dist = Math.sqrt(dx * dx + dy * dy) || 1;
+          const force = (dist - 110) * SPRING_K;
+          const fx = (dx / dist) * force,
+            fy = (dy / dist) * force;
+          a.vx += fx;
+          a.vy += fy;
+          b.vx -= fx;
+          b.vy -= fy;
+        }
+        // 中心引力
+        for (const n of nodes) {
+          n.vx += (W / 2 - n.x) * CENTER_K;
+          n.vy += (H / 2 - n.y) * CENTER_K;
+        }
+        // 积分 + 阻尼（附加轻微随机漂移，让图谱永远保持动效）
+        for (const n of nodes) {
+          n.vx += (Math.random() - 0.5) * DRIFT;
+          n.vy += (Math.random() - 0.5) * DRIFT;
+          n.vx *= DAMPING;
+          n.vy *= DAMPING;
+          // 速度钳制：防止节点震荡失控（乱跳）
+          n.vx = Math.max(-MAX_SPEED, Math.min(MAX_SPEED, n.vx));
+          n.vy = Math.max(-MAX_SPEED, Math.min(MAX_SPEED, n.vy));
+          n.x += n.vx;
+          n.y += n.vy;
+          // 边界约束
+          n.x = Math.max(50, Math.min(W - 50, n.x));
+          n.y = Math.max(50, Math.min(H - 50, n.y));
+        }
+      }
+
+      // 构建 SVG
+      let edgeEls = [];
+      let nodeEls = [];
+      let labelEls = [];
+      let viewport = null;
+      let panX = 0,
+        panY = 0,
+        zoom = 1; // 平移与缩放状态（Obsidian 式交互）
+
+      // Obsidian 式高亮：聚焦节点+直接关联保持清晰，其余节点/标签/连线淡出
+      function setHover(node, on) {
+        if (on) {
+          const neighbor = new Set([node.id]);
+          edges.forEach((e) => {
+            if (e.source.id === node.id) neighbor.add(e.target.id);
+            if (e.target.id === node.id) neighbor.add(e.source.id);
+          });
+          edges.forEach((e, i) => {
+            if (e.source.id === node.id || e.target.id === node.id) {
+              edgeEls[i].setAttribute('stroke', '#a855f7');
+              edgeEls[i].setAttribute('stroke-width', '0.8');
+              edgeEls[i].setAttribute('opacity', '0.9');
+            } else {
+              edgeEls[i].setAttribute('opacity', '0.15');
+            }
+          });
+          nodes.forEach((nd, i) => {
+            const lit = nd.id === node.id || neighbor.has(nd.id);
+            nodeEls[i].setAttribute('opacity', lit ? '1' : '0.18');
+            labelEls[i].setAttribute('opacity', lit ? '1' : '0.18');
+          });
+        } else {
+          edges.forEach((e, i) => {
+            edgeEls[i].setAttribute('stroke', '#d1d5db');
+            edgeEls[i].setAttribute('stroke-width', '0.3');
+            edgeEls[i].setAttribute('opacity', '0.6');
+          });
+          nodes.forEach((nd, i) => {
+            nodeEls[i].setAttribute('opacity', '1');
+            labelEls[i].setAttribute('opacity', '1');
+          });
+        }
+      }
+
+      function build() {
+        svg.innerHTML = '';
+        viewport = document.createElementNS(NS, 'g');
+        svg.appendChild(viewport);
+        edgeEls = edges.map((e) => {
+          const line = document.createElementNS(NS, 'line');
+          line.setAttribute('stroke', '#d1d5db');
+          line.setAttribute('stroke-width', '0.3');
+          line.setAttribute('opacity', '0.45');
+          viewport.appendChild(line);
+          return line;
+        });
+        const nodeHandlers = [];
+        nodeEls = nodes.map((n) => {
+          const g = document.createElementNS(NS, 'g');
+          g.setAttribute('class', 'node');
+          const circle = document.createElementNS(NS, 'circle');
+          circle.setAttribute('r', String(n.r));
+          circle.setAttribute('fill', '#1f2937');
+          circle.setAttribute('stroke', '#fff');
+          circle.setAttribute('stroke-width', '1');
+          circle.style.cursor = 'pointer';
+          g.appendChild(circle);
+          const click = () => {
+            if (moved) return; // 拖拽平移后不触发跳转
+            window.location.href = `/tags/${n.id.replace(/\//g, '-')}`;
+          };
+          const enter = () => {
+            circle.setAttribute('fill', '#a855f7');
+            tooltip.classList.remove('hidden');
+            tooltip.textContent = `${n.id} · ${n.count} 篇`;
+            setHover(n, true);
+          };
+          const move = (ev) => {
+            const rect = graphView.getBoundingClientRect();
+            tooltip.style.left = ev.clientX - rect.left + 14 + 'px';
+            tooltip.style.top = ev.clientY - rect.top - 10 + 'px';
+          };
+          const leave = () => {
+            circle.setAttribute('fill', '#1f2937');
+            tooltip.classList.add('hidden');
+            setHover(n, false);
+          };
+          nodeHandlers.push({ click, enter, move, leave });
+          g.addEventListener('click', click);
+          g.addEventListener('mouseenter', enter);
+          g.addEventListener('mousemove', move);
+          g.addEventListener('mouseleave', leave);
+          viewport.appendChild(g);
+          return g;
+        });
+        labelEls = nodes.map((n, i) => {
+          const t = document.createElementNS(NS, 'text');
+          t.setAttribute('font-size', '11');
+          t.setAttribute('fill', '#374151');
+          // 标签在屏幕空间定位（见 tick）：恒定字号，贴在圆点正下方中间
+          t.setAttribute('text-anchor', 'middle');
+          t.setAttribute('dominant-baseline', 'hanging');
+          t.setAttribute('x', '0');
+          t.setAttribute('y', '0');
+          t.textContent = n.id;
+          // 悬停/点击标签与圆点行为一致
+          const h = nodeHandlers[i];
+          t.addEventListener('click', h.click);
+          t.addEventListener('mouseenter', h.enter);
+          t.addEventListener('mousemove', h.move);
+          t.addEventListener('mouseleave', h.leave);
+          svg.appendChild(t);
+          return t;
+        });
+      }
+
+      function tick() {
+        viewport.setAttribute('transform', `translate(${panX},${panY}) scale(${zoom})`);
+        step();
+        edges.forEach((e, i) => {
+          edgeEls[i].setAttribute('x1', e.source.x);
+          edgeEls[i].setAttribute('y1', e.source.y);
+          edgeEls[i].setAttribute('x2', e.target.x);
+          edgeEls[i].setAttribute('y2', e.target.y);
+        });
+        nodes.forEach((n, i) => {
+          nodeEls[i].setAttribute('transform', `translate(${n.x},${n.y})`);
+          // 标签固定在屏幕空间：恒定字号，贴在圆点正下方中间，间距恒为 LABEL_GAP px
+          labelEls[i].setAttribute('transform', `translate(${panX + n.x * zoom},${panY + (n.y + n.r) * zoom + LABEL_GAP})`);
+          // 缩得太小时隐藏标签（Obsidian 行为），避免文字互相遮挡
+          labelEls[i].setAttribute('visibility', zoom < 0.5 ? 'hidden' : 'visible');
+        });
+      }
+
+      build();
+      // 持续动画（Obsidian 风格）：永不停止，靠轻微漂移保持呼吸感
+      function animate() {
+        tick();
+        requestAnimationFrame(animate);
+      }
+      animate();
+
+      // ---- 滚轮缩放（以光标为锚点）----
+      graphView.addEventListener(
+        'wheel',
+        (ev) => {
+          ev.preventDefault();
+          const rect = graphView.getBoundingClientRect();
+          const mx = ev.clientX - rect.left;
+          const my = ev.clientY - rect.top;
+          const factor = Math.exp(-ev.deltaY * 0.0012);
+          const newZoom = Math.min(4, Math.max(0.3, zoom * factor));
+          panX = mx - ((mx - panX) / zoom) * newZoom;
+          panY = my - ((my - panY) / zoom) * newZoom;
+          zoom = newZoom;
+        },
+        { passive: false },
+      );
+
+      // ---- 鼠标拖拽平移 ----
+      let dragging = false;
+      let moved = false;
+      let startX = 0,
+        startY = 0,
+        startPanX = 0,
+        startPanY = 0;
+      svg.style.cursor = 'grab';
+      svg.addEventListener('mousedown', (ev) => {
+        dragging = true;
+        moved = false;
+        startX = ev.clientX;
+        startY = ev.clientY;
+        startPanX = panX;
+        startPanY = panY;
+        svg.style.cursor = 'grabbing';
+      });
+      window.addEventListener('mousemove', (ev) => {
+        if (!dragging) return;
+        const dx = ev.clientX - startX;
+        const dy = ev.clientY - startY;
+        if (Math.abs(dx) + Math.abs(dy) > 3) moved = true;
+        panX = startPanX + dx;
+        panY = startPanY + dy;
+      });
+      window.addEventListener('mouseup', () => {
+        dragging = false;
+        svg.style.cursor = 'grab';
+      });
+    }
+
+    // 页面加载后自动初始化（图谱为默认视图）
+    function startGraph() {
+      if (!document.getElementById('graph-view').classList.contains('hidden')) {
+        initGraph();
+      }
+    }
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', startGraph);
+    } else {
+      startGraph();
+    }
+  })();
+</script>

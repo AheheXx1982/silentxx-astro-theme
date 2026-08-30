@@ -1,0 +1,113 @@
+---
+import Layout from '@layouts/Layout.astro';
+import TwoColumnLayout from '@layouts/TwoColumnLayout.astro';
+import Cover from '@components/ui/cover/Cover.astro';
+import HomeSider from '@components/layout/HomeSider.astro';
+import QuoteMarquee from '@components/fun/QuoteMarquee.astro';
+import { getAllPosts } from '@lib/content';
+import type { CollectionEntry } from 'astro:content';
+import { getSeoConfig } from '@lib/i18n';
+
+const lang = 'zh';
+const seoConfig = getSeoConfig('zh');
+
+async function getCategoryPosts(lang: string): Promise<CollectionEntry<'blog'>[]> {
+  const posts = await getAllPosts();
+  const filtered = posts.filter((post) => {
+    const postLang = post.data.lang || 'zh';
+    if (postLang !== lang) return false;
+    const cats = post.data.categories;
+    if (!cats || !Array.isArray(cats)) return false;
+    const flatCats = cats.flat(Infinity).map((c: unknown) => String(c));
+    return flatCats.includes('期权策略与实战');
+  });
+  filtered.sort((a, b) => new Date(b.data.date).getTime() - new Date(a.data.date).getTime());
+  return filtered;
+}
+
+const posts = await getCategoryPosts(lang);
+---
+
+<Layout title={`策略进阶 | ${seoConfig.title}`} description="从卖方核心策略到买方对冲技巧——Covered Call、Sell Put、Wheel、PMCC 的实战拆解与深度复盘。">
+  <TwoColumnLayout>
+    <Cover slot="cover" title="策略进阶" />
+    <HomeSider slot="sider" lang={lang} />
+    <QuoteMarquee />
+
+    <div class="shadow-box bg-gradient-start mx-0 flex w-full flex-col px-6 py-4 md:px-3 md:py-2">
+      <div class="mb-8 border-l-4 border-purple-500 bg-purple-50 dark:bg-purple-950/30 px-6 py-4 rounded-r-lg">
+        <h2 class="text-2xl font-bold text-purple-600 dark:text-purple-400 mb-3">⚔️ 策略进阶</h2>
+        <p class="text-muted-foreground leading-relaxed">
+          掌握了基础概念之后，这里是你真正的战场。Covered Call、Cash Secured Put、Wheel 轮动、PMCC、Vertical Spread——每一种策略都配真实案例，不讲虚的，只讲怎么落地。
+        </p>
+      </div>
+
+      <div class="mb-6">
+        <h3 class="text-xl font-bold mb-4 flex items-center gap-2">
+          <span class="inline-block w-1 h-6 bg-gradient-to-b from-purple-500 to-pink-500 rounded"></span>
+          全部文章
+        </h3>
+        {
+          posts.length > 0 ? (
+            <div class="grid gap-4 md:grid-cols-1">
+              {posts.map((post) => (
+                <a
+                  href={`/article/${post.data.link ?? (typeof post.slug === 'string' ? post.slug.split('/').pop() || post.slug : String(post.slug))}`}
+                  class="group block bg-card border border-border rounded-lg p-5 transition-all duration-300 hover:shadow-lg hover:scale-[1.02] hover:border-primary/30"
+                >
+                  <div class="flex items-start gap-4">
+                    <div class="flex-shrink-0 w-12 h-12 bg-gradient-to-br from-purple-500 to-pink-500 rounded-lg flex items-center justify-center text-white font-bold text-lg">
+                      <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>
+                    </div>
+                    <div class="flex-1 min-w-0">
+                      <h4 class="text-lg font-semibold text-primary group-hover:text-purple-600 dark:group-hover:text-purple-400 mb-2 transition-colors">
+                        {post.data.title}
+                      </h4>
+                      <p class="text-sm text-muted-foreground line-clamp-2 mb-2">
+                        {post.data.description || ''}
+                      </p>
+                      <div class="flex items-center gap-4 text-xs text-muted-foreground">
+                        <span>📅 {new Date(post.data.date).toLocaleDateString('zh-CN')}</span>
+                        {post.data.tags && post.data.tags.length > 0 && (
+                          <div class="flex gap-1">
+                            {post.data.tags.slice(0, 3).map((tag: string) => (
+                              <span class="px-2 py-0.5 bg-primary/10 rounded-full">#{tag}</span>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                </a>
+              ))}
+            </div>
+          ) : (
+            <div class="text-center py-16 text-muted-foreground">
+              <div class="text-4xl mb-3">⚔️</div>
+              <p class="text-lg font-semibold">内容正在建设中</p>
+              <p class="text-sm mt-1">策略实战文章即将陆续上线</p>
+            </div>
+          )
+        }
+      </div>
+
+      <div class="mt-8 grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div class="bg-gradient-to-br from-purple-50 to-purple-100 dark:from-purple-950/30 dark:to-purple-900/20 rounded-lg p-4">
+          <div class="text-3xl mb-2">🎯</div>
+          <h4 class="font-semibold mb-1 text-purple-900 dark:text-purple-300">实战导向</h4>
+          <p class="text-sm text-muted-foreground">每篇都配真实交易案例</p>
+        </div>
+        <div class="bg-gradient-to-br from-pink-50 to-pink-100 dark:from-pink-950/30 dark:to-pink-900/20 rounded-lg p-4">
+          <div class="text-3xl mb-2">🔄</div>
+          <h4 class="font-semibold mb-1 text-pink-900 dark:text-pink-300">策略组合</h4>
+          <p class="text-sm text-muted-foreground">单策略 + 组合策略全覆盖</p>
+        </div>
+        <div class="bg-gradient-to-br from-indigo-50 to-indigo-100 dark:from-indigo-950/30 dark:to-indigo-900/20 rounded-lg p-4">
+          <div class="text-3xl mb-2">📊</div>
+          <h4 class="font-semibold mb-1 text-indigo-900 dark:text-indigo-300">深度复盘</h4>
+          <p class="text-sm text-muted-foreground">盈亏分析 + 经验教训提炼</p>
+        </div>
+      </div>
+    </div>
+  </TwoColumnLayout>
+</Layout>

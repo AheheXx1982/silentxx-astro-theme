@@ -1,0 +1,113 @@
+/* TableOfContents 组件样式 */
+.toc-container {
+  /* 自定义滚动条样式 */
+  scrollbar-width: thin;
+  scrollbar-color: hsl(var(--primary) / 0.3) transparent;
+}
+
+.toc-container::-webkit-scrollbar {
+  width: 4px;
+}
+
+.toc-container::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.toc-container::-webkit-scrollbar-thumb {
+  background: hsl(var(--primary) / 0.3);
+  border-radius: 2px;
+}
+
+.toc-container::-webkit-scrollbar-thumb:hover {
+  background: hsl(var(--primary) / 0.5);
+}
+
+/* 目录项的平滑过渡动画 */
+.toc-item {
+  position: relative;
+  overflow: hidden;
+}
+
+.toc-item::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  height: 100%;
+  width: 0;
+  background: hsl(var(--primary) / 0.1);
+  transition: width 0.2s ease;
+  z-index: -1;
+}
+
+.toc-item:hover::before {
+  width: 100%;
+}
+
+/* Silent's Note 引用块样式 - 配合网站主题 */
+blockquote {
+  position: relative;
+  border-left: none;
+  background: linear-gradient(
+    135deg,
+    hsl(var(--card)) 0%,
+    hsl(var(--card) / 0.95) 100%
+  );
+  padding: 1.25rem 1.5rem;
+  border-radius: 0.75rem;
+  color: hsl(var(--card-foreground));
+  font-style: normal;
+  margin: 2rem 0;
+  box-shadow: 
+    0 1px 3px 0 rgb(0 0 0 / 0.1),
+    0 1px 2px -1px rgb(0 0 0 / 0.1);
+  border: 1px solid hsl(var(--border));
+  transition: all 0.2s ease;
+}
+
+/* 左侧装饰条 */
+blockquote::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 4px;
+  background: linear-gradient(
+    180deg,
+    hsl(var(--primary)) 0%,
+    hsl(var(--primary) / 0.5) 100%
+  );
+  border-radius: 0.75rem 0 0 0.75rem;
+}
+
+/* 悬停效果 */
+blockquote:hover {
+  box-shadow: 
+    0 4px 6px -1px rgb(0 0 0 / 0.1),
+    0 2px 4px -2px rgb(0 0 0 / 0.1);
+  transform: translateY(-1px);
+}
+
+/* 加粗文字使用主题色 */
+blockquote strong {
+  color: hsl(var(--primary));
+  font-weight: 600;
+}
+
+/* emoji 或图标 */
+blockquote p:first-child::before {
+  content: '💡';
+  margin-right: 0.5rem;
+  font-size: 1.25rem;
+}
+
+/* 深色模式下增强对比 */
+.dark blockquote {
+  background: linear-gradient(
+    135deg,
+    hsl(var(--card)) 0%,
+    hsl(var(--card) / 0.8) 100%
+  );
+  border-color: hsl(var(--border) / 0.5);
+}

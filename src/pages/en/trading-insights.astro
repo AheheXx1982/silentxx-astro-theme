@@ -1,0 +1,99 @@
+---
+import Layout from '@layouts/Layout.astro';
+import TwoColumnLayout from '@layouts/TwoColumnLayout.astro';
+import Cover from '@components/ui/cover/Cover.astro';
+import HomeSider from '@components/layout/HomeSider.astro';
+import QuoteMarquee from '@components/fun/QuoteMarquee.astro';
+import { getAllPosts } from '@lib/content';
+import type { CollectionEntry } from 'astro:content';
+
+const lang = 'en';
+
+async function getInsightPosts(lang: string): Promise<CollectionEntry<'blog'>[]> {
+  const posts = await getAllPosts();
+  const filtered = posts.filter((post) => {
+    const postLang = post.data.lang || 'zh';
+    if (postLang !== lang) return false;
+    const cats = post.data.categories;
+    if (!cats || !Array.isArray(cats)) return false;
+    const flatCats = cats.flat(Infinity).map((c: unknown) => String(c));
+    return flatCats.includes('交易洞察');
+  });
+  filtered.sort((a, b) => new Date(b.data.date).getTime() - new Date(a.data.date).getTime());
+  return filtered;
+}
+
+const posts = await getInsightPosts(lang);
+const pageTitle = `Trading Insights | SilentXx`;
+---
+
+<Layout title={pageTitle} description="Lessons drawn from real trades — deep thoughts on leverage, cash flow, liquidity, and risk management.">
+  <TwoColumnLayout>
+    <Cover slot="cover" title="Trading Insights" />
+    <HomeSider slot="sider" lang={lang} />
+    <QuoteMarquee lang={lang} />
+
+    <div class="shadow-box bg-gradient-start mx-0 flex w-full flex-col px-6 py-4 md:px-3 md:py-2">
+      <div class="mb-8 border-l-4 border-indigo-500 bg-indigo-50 dark:bg-indigo-950/30 px-6 py-4 rounded-r-lg">
+        <h2 class="text-2xl font-bold text-indigo-600 dark:text-indigo-400 mb-3">💡 Trading Insights</h2>
+        <p class="text-muted-foreground leading-relaxed">
+          Not tutorials. Not trade logs. These are cognitive upgrades distilled from real trades — the underlying logic of leverage, cash flow, liquidity, and risk management. Complements the Trading Journal: the journal records "what happened," insights ask "what did I learn?"
+        </p>
+      </div>
+
+      <div class="mb-6">
+        <h3 class="text-xl font-bold mb-4 flex items-center gap-2">
+          <span class="inline-block w-1 h-6 bg-gradient-to-b from-indigo-500 to-violet-500 rounded"></span>
+          All Insights
+        </h3>
+        {
+          posts.length > 0 ? (
+            <div class="grid gap-4 md:grid-cols-1">
+              {posts.map((post) => (
+                <a href={`/en/article/${post.data.link ?? (typeof post.slug === 'string' ? post.slug.split('/').pop() || post.slug : String(post.slug))}`}
+                  class="group block bg-card border border-border rounded-lg p-5 transition-all duration-300 hover:shadow-lg hover:scale-[1.02] hover:border-primary/30">
+                  <div class="flex items-start gap-4">
+                    <div class="flex-shrink-0 w-12 h-12 bg-gradient-to-br from-indigo-500 to-violet-500 rounded-lg flex items-center justify-center text-white font-bold text-lg">
+                      <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/></svg>
+                    </div>
+                    <div class="flex-1 min-w-0">
+                      <h4 class="text-lg font-semibold text-primary group-hover:text-indigo-600 dark:group-hover:text-indigo-400 mb-2 transition-colors">{post.data.title}</h4>
+                      <p class="text-sm text-muted-foreground line-clamp-2 mb-2">{post.data.description || ''}</p>
+                      <div class="flex items-center gap-4 text-xs text-muted-foreground">
+                        <span>📅 {new Date(post.data.date).toLocaleDateString('en-US')}</span>
+                      </div>
+                    </div>
+                  </div>
+                </a>
+              ))}
+            </div>
+          ) : (
+            <div class="text-center py-16 text-muted-foreground">
+              <div class="text-4xl mb-3">💡</div>
+              <p class="text-lg font-semibold">No insights yet</p>
+              <p class="text-sm mt-1">Add posts with "交易洞察" category to see them here.</p>
+            </div>
+          )
+        }
+      </div>
+
+      <div class="mt-8 grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div class="bg-gradient-to-br from-indigo-50 to-indigo-100 dark:from-indigo-950/30 dark:to-indigo-900/20 rounded-lg p-4">
+          <div class="text-3xl mb-2">🧠</div>
+          <h4 class="font-semibold mb-1 text-indigo-900 dark:text-indigo-300">Cognitive Upgrade</h4>
+          <p class="text-sm text-muted-foreground">Not just "how" but "why"</p>
+        </div>
+        <div class="bg-gradient-to-br from-violet-50 to-violet-100 dark:from-violet-950/30 dark:to-violet-900/20 rounded-lg p-4">
+          <div class="text-3xl mb-2">📖</div>
+          <h4 class="font-semibold mb-1 text-violet-900 dark:text-violet-300">Real Cases</h4>
+          <p class="text-sm text-muted-foreground">Every insight backed by live trading</p>
+        </div>
+        <div class="bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-950/30 dark:to-slate-900/20 rounded-lg p-4">
+          <div class="text-3xl mb-2">🔮</div>
+          <h4 class="font-semibold mb-1 text-slate-900 dark:text-slate-300">Evergreen</h4>
+          <p class="text-sm text-muted-foreground">Compounds with trading experience</p>
+        </div>
+      </div>
+    </div>
+  </TwoColumnLayout>
+</Layout>

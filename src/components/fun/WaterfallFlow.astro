@@ -1,0 +1,230 @@
+---
+interface WaterfallItem {
+  id: number;
+  title: string;
+  content: string;
+  date: string;
+  category: string;
+}
+
+interface Props {
+  items: WaterfallItem[];
+  initialDisplayCount?: number;
+}
+
+const { items = [], initialDisplayCount = 6 } = Astro.props;
+---
+
+<div class="waterfall-container">
+  <style is:global>
+    .waterfall-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr); /* 固定每行4列 */
+      gap: 1.5rem;
+      margin-top: 1.5rem;
+    }
+
+    .waterfall-item {
+      break-inside: avoid;
+      margin-bottom: 1.5rem;
+      transition:
+        transform 0.3s ease,
+        box-shadow 0.3s ease;
+      border: 1px solid #e5e7eb;
+      border-radius: 0.75rem;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    }
+
+    .dark .waterfall-item {
+      border: 1px solid #374151;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+    }
+
+    .waterfall-item:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+    }
+
+    .dark .waterfall-item:hover {
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.4);
+    }
+
+    .waterfall-card {
+      padding: 1.5rem;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .waterfall-title {
+      font-size: 1.25rem;
+      font-weight: 600;
+      color: #1f2937;
+      margin: 0 0 1rem 0;
+    }
+
+    .dark .waterfall-title {
+      color: #f9fafb;
+    }
+
+    .waterfall-content {
+      flex-grow: 1;
+      color: #374151;
+      line-height: 1.6;
+      margin-bottom: 1.5rem;
+    }
+
+    .dark .waterfall-content {
+      color: #d1d5db;
+    }
+
+    .waterfall-footer {
+      display: flex;
+      justify-content: flex-end;
+      align-items: center;
+      padding-top: 1rem;
+    }
+
+    .waterfall-date {
+      font-size: 0.875rem;
+      color: #6b7280;
+      margin-left: auto;
+    }
+
+    .dark .waterfall-date {
+      color: #9ca3af;
+    }
+
+    @media (max-width: 1200px) {
+      .waterfall-grid {
+        grid-template-columns: repeat(3, 1fr); /* 中等屏幕每行3列 */
+        gap: 1.25rem;
+      }
+    }
+    
+    @media (max-width: 992px) {
+      .waterfall-grid {
+        grid-template-columns: repeat(2, 1fr); /* 小屏幕每行2列 */
+        gap: 1rem;
+      }
+    }
+
+    @media (max-width: 768px) {
+      .waterfall-grid {
+        grid-template-columns: 1fr; /* 移动端每行1列 */
+        gap: 1rem;
+      }
+    }
+  </style>
+
+  <div class="waterfall-grid" id="waterfall-grid">
+    {
+      // 如果有初始items数据，直接渲染
+      items.length > 0 ? (
+        items.map((item, index) => (
+          <div
+            class={`waterfall-item ${
+              index % 10 === 0
+                ? 'bg-white dark:bg-gray-800'
+                : index % 10 === 1
+                  ? 'bg-gray-50 dark:bg-gray-700'
+                  : index % 10 === 2
+                    ? 'bg-blue-50 dark:bg-blue-900/30'
+                    : index % 10 === 3
+                      ? 'bg-green-50 dark:bg-green-900/30'
+                      : index % 10 === 4
+                        ? 'bg-yellow-50 dark:bg-yellow-900/30'
+                        : index % 10 === 5
+                          ? 'bg-red-50 dark:bg-red-900/30'
+                          : index % 10 === 6
+                            ? 'bg-purple-50 dark:bg-purple-900/30'
+                            : index % 10 === 7
+                              ? 'bg-pink-50 dark:bg-pink-900/30'
+                              : index % 10 === 8
+                                ? 'bg-indigo-50 dark:bg-indigo-900/30'
+                                : 'bg-teal-50 dark:bg-teal-900/30'
+            }`}
+            data-key={item.id}
+          >
+            <div class="waterfall-card">
+              <h3 class="waterfall-title">{item.title}</h3>
+              <div class="waterfall-content">{item.content}</div>
+              <div class="waterfall-footer">
+                <span class="waterfall-date">{item.date}</span>
+              </div>
+            </div>
+          </div>
+        ))
+      ) : (
+        // 如果没有初始数据，显示加载提示
+        <div class="col-span-full text-center py-8 text-gray-500 dark:text-gray-400">
+          加载中...
+        </div>
+      )
+    }
+  </div>
+
+  <script>
+    {/* @ts-ignore */ }
+    window.addEventListener('updateWaterfall', function(event) {
+      // @ts-ignore
+      const items = event.detail.items;
+      const grid = document.getElementById('waterfall-grid');
+      
+      // 添加调试日志
+      console.log('WaterfallFlow: Received updateWaterfall event with', items ? items.length : 0, 'items');
+      
+      if (grid && items) {
+        // 清空现有内容
+        grid.innerHTML = '';
+        
+        // 如果没有items，显示加载提示
+        if (items.length === 0) {
+          grid.innerHTML = '<div class="col-span-full text-center py-8 text-gray-500 dark:text-gray-400">暂无内容</div>';
+          return;
+        }
+        
+        // 生成新的瀑布流内容
+        items.forEach(function(item: any, index: number) {
+          const colorClass = 
+            index % 10 === 0 ? 'bg-white dark:bg-gray-800' :
+            index % 10 === 1 ? 'bg-gray-50 dark:bg-gray-700' :
+            index % 10 === 2 ? 'bg-blue-50 dark:bg-blue-900/30' :
+            index % 10 === 3 ? 'bg-green-50 dark:bg-green-900/30' :
+            index % 10 === 4 ? 'bg-yellow-50 dark:bg-yellow-900/30' :
+            index % 10 === 5 ? 'bg-red-50 dark:bg-red-900/30' :
+            index % 10 === 6 ? 'bg-purple-50 dark:bg-purple-900/30' :
+            index % 10 === 7 ? 'bg-pink-50 dark:bg-pink-900/30' :
+            index % 10 === 8 ? 'bg-indigo-50 dark:bg-indigo-900/30' :
+            'bg-teal-50 dark:bg-teal-900/30';
+          
+          const itemElement = document.createElement('div');
+          itemElement.className = `waterfall-item ${colorClass}`;
+          itemElement.dataset.key = item.id;
+          
+          itemElement.innerHTML = `
+            <div class="waterfall-card">
+              <h3 class="waterfall-title">${item.title}</h3>
+              <div class="waterfall-content">${item.content}</div>
+              <div class="waterfall-footer">
+                <span class="waterfall-date">${item.date}</span>
+              </div>
+            </div>
+          `;
+          
+          grid.appendChild(itemElement);
+        });
+      }
+    });
+    
+    // 确保在Astro页面加载时也能正确初始化
+    document.addEventListener('astro:page-load', function() {
+      // 如果grid存在但没有子元素，不主动触发更新
+      // 而是等待IllusionaryThoughtsContent组件来触发
+      const grid = document.getElementById('waterfall-grid');
+      if (grid && grid.children.length === 0) {
+        console.log('WaterfallFlow: astro:page-load event received, grid is empty, waiting for content');
+      }
+    });
+  </script>
+</div>

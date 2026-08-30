@@ -1,0 +1,83 @@
+---
+interface Props {
+  /**
+   * 棒棒糖的大小
+   * @default "md"
+   */
+  size?: 'sm' | 'md' | 'lg';
+  /**
+   * 是否有动画效果
+   * @default true
+   */
+  animated?: boolean;
+}
+
+const { size = 'md', animated = true } = Astro.props;
+
+// 定义不同尺寸的样式
+const sizeClasses = {
+  sm: 'w-16 h-16',
+  md: 'w-24 h-24',
+  lg: 'w-32 h-32',
+};
+
+// 棒子的尺寸
+const stickClasses = {
+  sm: 'w-1 h-16',
+  md: 'w-1.5 h-24',
+  lg: 'w-2 h-32',
+};
+---
+
+<div class={`inline-block relative ${size === 'sm' ? 'w-16' : size === 'md' ? 'w-24' : 'w-32'}`}>
+  <!-- 棒棒糖的棍子 -->
+  <div
+    class={`
+      absolute bottom-0 left-1/2 transform -translate-x-1/2 
+      ${stickClasses[size as keyof typeof stickClasses]} 
+      bg-amber-700 rounded-full
+      ${animated ? 'animate-[lollipop-wiggle_2s_ease-in-out_infinite]' : ''}
+    `}
+  >
+  </div>
+
+  <!-- 棒棒糖的圆形糖果（仅使用您提供的PNG图片） -->
+  <div
+    class={`
+      ${sizeClasses[size]} 
+      rounded-full 
+      relative 
+      ${animated ? 'animate-[lollipop-bounce_3s_ease-in-out_infinite]' : ''}
+    `}
+    style={{
+      // 仅使用您提供的PNG图片作为背景
+      backgroundImage: 'url(/bbt.png)',
+      backgroundSize: 'cover',
+      backgroundPosition: 'center',
+      backgroundRepeat: 'no-repeat',
+    }}
+  >
+  </div>
+</div>
+
+<style>
+  @keyframes lollipop-wiggle {
+    0%,
+    100% {
+      transform: translateX(-50%) rotate(-3deg);
+    }
+    50% {
+      transform: translateX(-50%) rotate(3deg);
+    }
+  }
+
+  @keyframes lollipop-bounce {
+    0%,
+    100% {
+      transform: translateY(0);
+    }
+    50% {
+      transform: translateY(-6px);
+    }
+  }
+</style>

@@ -1,0 +1,44 @@
+---
+import { cn } from '@lib/utils';
+
+interface Props {
+  title: string;
+  count?: number;
+  href: string;
+  level?: 'h2' | 'h3';
+  className?: string;
+  target?: '_blank' | '_self';
+  showLinkIcon?: boolean; // 是否显示链接图标而不是数字
+}
+
+const { title, count, href, level = 'h2', className, target = '_self', showLinkIcon = false } = Astro.props;
+const Tag = level;
+---
+
+<Tag
+  class={cn(
+    'shoka-decoration-circle px-7.5 group relative py-5 text-2xl/9 h-19 font-bold',
+    {
+      'h-17 text-lg': level === 'h3',
+    },
+    className,
+  )}
+>
+  <a 
+    href={href} 
+    class="dashed-border group-hover:border-blue group-hover:text-blue border-b"
+    target={target}
+    rel={target === '_blank' ? 'noopener noreferrer' : undefined}
+  >
+    {title}
+  </a>
+  {showLinkIcon ? (
+    <svg xmlns="http://www.w3.org/2000/svg" class="inline-block ml-2 h-4 w-4 text-muted-foreground" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
+      <polyline points="15 3 21 3 21 9"></polyline>
+      <line x1="10" y1="14" x2="21" y2="3"></line>
+    </svg>
+  ) : count !== undefined && (
+    <span class={cn('text-[0.8em] text-muted-foreground')}>({count})</span>
+  )}
+</Tag>

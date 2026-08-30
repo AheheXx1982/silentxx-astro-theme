@@ -1,0 +1,853 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>21冷库库存看板 · 蛋糕产品线 · 概念演示</title>
+<style>
+  :root {
+    --brand: #C0392B;
+    --brand-dark: #96281B;
+    --bg: #F7F5F2;
+    --card: #FFFFFF;
+    --ink: #2C2C2C;
+    --muted: #8A8A8A;
+    --green: #27AE60;
+    --yellow: #F39C12;
+    --red: #E74C3C;
+    --border: #E8E3DC;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+    background: var(--bg);
+    color: var(--ink);
+    padding: 24px;
+    line-height: 1.5;
+  }
+  .header {
+    display: flex; align-items: center; justify-content: space-between;
+    flex-wrap: wrap; gap: 12px; margin-bottom: 20px;
+  }
+  .brand { display: flex; align-items: center; gap: 12px; }
+  .logo {
+    width: 44px; height: 44px; border-radius: 10px;
+    background: linear-gradient(135deg, var(--brand), #E67E22);
+    display: flex; align-items: center; justify-content: center;
+    color: #fff; font-weight: 800; font-size: 18px;
+  }
+  .title h1 { font-size: 20px; font-weight: 700; }
+  .title p { font-size: 13px; color: var(--muted); }
+  .badge-demo {
+    background: #FFF3CD; color: #856404; border: 1px solid #FFEEBA;
+    padding: 4px 12px; border-radius: 999px; font-size: 12px; font-weight: 600;
+  }
+  .storage-tabs { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 16px; }
+  .storage-tabs button {
+    border: 1px solid var(--border); background: #fff; border-radius: 10px;
+    padding: 8px 16px; font-size: 13px; font-weight: 700; cursor: pointer; color: var(--ink);
+  }
+  .storage-tabs button.active { background: var(--brand); color: #fff; border-color: var(--brand); }
+  .kpis {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 12px; margin-bottom: 20px;
+  }
+  .kpi {
+    background: var(--card); border: 1px solid var(--border); border-radius: 12px;
+    padding: 14px 16px;
+  }
+  .kpi .label { font-size: 12px; color: var(--muted); }
+  .kpi .value { font-size: 24px; font-weight: 800; margin-top: 2px; }
+  .kpi .sub { font-size: 12px; margin-top: 2px; }
+  .kpi.warn .value { color: var(--yellow); }
+  .kpi.danger .value { color: var(--red); }
+  .kpi.semi .value { color: #B45309; }
+  .card {
+    background: var(--card); border: 1px solid var(--border); border-radius: 12px;
+    padding: 16px; margin-bottom: 16px;
+  }
+  .card h2 { font-size: 15px; font-weight: 700; margin-bottom: 12px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px; }
+  .filters { display: flex; gap: 8px; flex-wrap: wrap; }
+  .filters button {
+    border: 1px solid var(--border); background: #fff; border-radius: 999px;
+    padding: 4px 14px; font-size: 12px; cursor: pointer; color: var(--ink);
+  }
+  .filters button.active { background: var(--brand); color: #fff; border-color: var(--brand); }
+  .type-filters { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 12px; }
+  .type-filters button {
+    border: 1px solid var(--border); background: #fff; border-radius: 999px;
+    padding: 4px 14px; font-size: 12px; cursor: pointer; color: var(--ink);
+  }
+  .type-filters button.active { background: var(--ink); color: #fff; border-color: var(--ink); }
+  .search-row { display: flex; gap: 8px; margin-bottom: 10px; }
+  .search-row input {
+    flex: 1; min-width: 0; border: 1.5px solid var(--border); border-radius: 10px;
+    padding: 11px 14px; font-size: 14px; background: #fff; color: var(--ink);
+  }
+  .search-row input:focus { outline: none; border-color: var(--brand); }
+  .search-row input::placeholder { color: var(--muted); }
+  .btn-clear {
+    border: 1px solid var(--border); background: #fff; border-radius: 10px;
+    padding: 0 16px; cursor: pointer; font-size: 13px; color: var(--muted); font-weight: 600;
+  }
+  .btn-clear:hover { color: var(--brand); border-color: var(--brand); }
+  .search-hint { font-size: 12px; color: var(--muted); margin-bottom: 8px; min-height: 16px; }
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  th {
+    text-align: left; padding: 8px 10px; color: var(--muted); font-weight: 600;
+    border-bottom: 2px solid var(--border); white-space: nowrap;
+  }
+  td { padding: 8px 10px; border-bottom: 1px solid #F0ECE6; white-space: nowrap; }
+  tr:last-child td { border-bottom: none; }
+  .tag { display: inline-block; padding: 2px 10px; border-radius: 999px; font-size: 12px; font-weight: 600; white-space: nowrap; }
+  .tag.ok { background: #E8F8F0; color: var(--green); }
+  .tag.warn { background: #FEF5E7; color: var(--yellow); }
+  .tag.danger { background: #FDEDEC; color: var(--red); }
+  .tag-semi-mini { display: inline-block; margin-left: 5px; padding: 1px 7px; border-radius: 6px; font-size: 11px; font-weight: 600; background: #FEF3E2; color: #B45309; border: 1px solid #FDE3B5; vertical-align: middle; white-space: nowrap; }
+  .tag-finished { display: inline-block; margin-left: 5px; padding: 1px 7px; border-radius: 6px; font-size: 11px; font-weight: 600; background: #E8F8F0; color: var(--green); border: 1px solid #BEEBD8; vertical-align: middle; white-space: nowrap; }
+  .due-badge { display: inline-block; padding: 2px 9px; border-radius: 999px; font-size: 11.5px; font-weight: 600; white-space: nowrap; }
+  .due-badge.ok { background: #E8F8F0; color: var(--green); }
+  .due-badge.today { background: #FEF5E7; color: var(--yellow); }
+  .due-badge.over { background: #FDEDEC; color: var(--red); }
+  .tag-dept { display: inline-block; padding: 2px 10px; border-radius: 999px; font-size: 12px; font-weight: 600; white-space: nowrap; }
+  .tag-cust {
+    display: inline-block; padding: 2px 9px; border-radius: 8px; font-size: 12px;
+    background: #F6F3EF; border: 1px solid var(--border); color: #5A554E; white-space: nowrap; font-weight: 600;
+  }
+  .btn-mini {
+    border: 1px solid var(--border); background: #fff; border-radius: 8px;
+    padding: 3px 10px; font-size: 12px; cursor: pointer;
+  }
+  .btn-mini:hover { border-color: var(--brand); color: var(--brand); }
+  .btn-mini.done { background: #E8F8F0; border-color: var(--green); color: var(--green); }
+  .bars { display: flex; flex-direction: column; gap: 10px; }
+  .bar-row { display: grid; grid-template-columns: 160px 1fr 90px; gap: 12px; align-items: center; font-size: 13px; }
+  .bar-track { background: #F0ECE6; border-radius: 8px; height: 22px; position: relative; overflow: hidden; }
+  .bar-fill { height: 100%; border-radius: 8px; }
+  .bar-fill.demand { background: var(--green); }
+  .bar-fill.over { background: var(--red); }
+  .bar-fill.normal { background: var(--green); }
+  .bar-fill.short { background: #E67E22; }
+  .bar-note { font-size: 11px; color: var(--muted); }
+  .legend { display: flex; gap: 16px; font-size: 12px; color: var(--muted); margin-bottom: 10px; flex-wrap: wrap; }
+  .legend span { display: flex; align-items: center; gap: 6px; }
+  .legend-colors { display: flex; flex-wrap: wrap; gap: 6px 16px; margin-bottom: 12px; }
+  .legend-colors span { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; color: #555; }
+  .dot { width: 10px; height: 10px; border-radius: 3px; display: inline-block; flex: none; }
+  .dept-dot { width: 10px; height: 10px; border-radius: 3px; display: inline-block; margin-right: 6px; vertical-align: middle; }
+  .cust-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px; }
+  .cust-chip {
+    background: #fff; border: 1px solid var(--border); border-radius: 10px;
+    padding: 10px 12px; display: flex; align-items: center; gap: 8px;
+  }
+  .cust-chip .ic { font-size: 18px; }
+  .cust-chip .nm { font-size: 13px; font-weight: 700; }
+  .cust-chip .qt { font-size: 12px; color: var(--muted); margin-left: auto; white-space: nowrap; }
+  .note {
+    background: #FBF9F7; border-left: 3px solid var(--brand);
+    padding: 10px 14px; border-radius: 0 8px 8px 0; font-size: 12.5px; color: #555;
+  }
+  .note b { color: var(--ink); }
+  .hidden { display: none !important; }
+  .empty { color: var(--muted); text-align: center; padding: 20px 0; font-size: 13px; }
+  .spec-muted { color: var(--muted); }
+  .sug-dept { display: flex; align-items: center; gap: 6px; font-size: 14px; margin: 12px 0 6px; }
+  .sug-dept:first-child { margin-top: 2px; }
+  .sug-dept .g-meta { font-size: 12px; color: var(--muted); margin-left: auto; }
+  .holiday-next { display: flex; align-items: center; gap: 8px; font-size: 14px; margin-bottom: 4px; }
+  .group-header { cursor: pointer; background: #FAF8F5; }
+  .group-header:hover { background: #F3EFEA; }
+  .g-arrow { display: inline-block; width: 14px; color: var(--muted); }
+  .g-meta { font-size: 12px; color: var(--muted); margin-left: 8px; }
+  tr.group-row.hidden { display: none; }
+
+  /* —— 移动端卡片视图（默认隐藏，桌面显示表格） —— */
+  #stockCards { display: none; }
+  .m-group { margin-bottom: 10px; border: 1px solid var(--border); border-radius: 12px; background: #fff; overflow: hidden; }
+  .m-group-header { display: flex; align-items: center; gap: 6px; padding: 12px 14px; background: #FAF8F5; cursor: pointer; font-size: 15px; flex-wrap: wrap; }
+  .m-group-header:active { background: #F3EFEA; }
+  .m-group-header .g-meta { margin-left: auto; white-space: nowrap; }
+  .m-group-rows { border-top: 1px solid var(--border); }
+  .m-group-rows.hidden { display: none; }
+  .m-card { padding: 10px 14px; border-bottom: 1px solid #F0ECE6; }
+  .m-card:last-child { border-bottom: none; }
+  .m-line1 { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; }
+  .m-spec { font-size: 14px; font-weight: 700; word-break: break-word; }
+  .m-qty { font-size: 16px; font-weight: 800; color: var(--brand); white-space: nowrap; }
+  .m-line2 { display: flex; align-items: center; gap: 6px; margin-top: 7px; flex-wrap: wrap; }
+  .m-line3 { display: flex; align-items: center; gap: 6px 10px; margin-top: 7px; font-size: 12px; color: var(--muted); flex-wrap: wrap; }
+  .m-batch { font-family: ui-monospace, "SF Mono", Consolas, monospace; font-size: 11.5px; }
+  .m-days { font-weight: 700; }
+  .m-line4 { display: flex; align-items: center; gap: 8px; margin-top: 8px; flex-wrap: wrap; }
+  .m-action { font-size: 12px; color: #555; }
+
+  @media (max-width: 760px) {
+    body { padding: 12px 10px 32px; }
+    .header { margin-bottom: 14px; }
+    .title h1 { font-size: 18px; }
+    .title p { font-size: 11.5px; }
+    .badge-demo { padding: 3px 10px; font-size: 11px; }
+    .storage-tabs button { flex: 1 1 auto; padding: 9px 10px; font-size: 12.5px; }
+    .kpis { grid-template-columns: repeat(2, 1fr); gap: 10px; }
+    .kpi { padding: 12px 14px; }
+    .kpi .value { font-size: 20px; }
+    .card { padding: 12px; }
+    .card h2 { font-size: 14px; }
+    #stockTable { display: none; }
+    #stockCards { display: block; }
+    .bar-row { grid-template-columns: 1fr; gap: 4px; }
+    .bar-row .bar-track { height: 18px; }
+    .bar-row > span:first-child { display: flex; align-items: center; gap: 6px; font-size: 13px; }
+    .bar-row > span:last-child { text-align: left; font-size: 12px; }
+    .bar-note { display: inline; margin-left: 6px; }
+    .cust-grid { grid-template-columns: repeat(2, 1fr); gap: 8px; }
+    .cust-chip { padding: 9px 10px; }
+    .note { font-size: 12px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="brand">
+    <div class="logo">TCF</div>
+    <div class="title">
+      <h1>21冷库库存看板</h1>
+      <p>The Cake Factory · 蛋糕产品线 · 库存 · 预警 · 概念演示</p>
+    </div>
+  </div>
+  <span class="badge-demo">⚡ 演示数据 · 概念原型</span>
+</div>
+
+<div class="kpis">
+  <div class="kpi">
+    <div class="label">冷库在库总量 <span id="kpiLabel" style="color:var(--muted);font-weight:400">21冷库</span></div>
+    <div class="value"><span id="kpiTotal">0</span> <span style="font-size:13px;color:var(--muted)">件</span></div>
+    <div class="sub">估算货值 <span id="kpiValue">S$0</span></div>
+  </div>
+  <div class="kpi warn">
+    <div class="label">临期预警（≤3天）</div>
+    <div class="value" id="kpiWarn">0</div>
+    <div class="sub">建议尽快销售 / 打折</div>
+  </div>
+  <div class="kpi danger">
+    <div class="label">已过期 / 待处理</div>
+    <div class="value" id="kpiDanger">0</div>
+    <div class="sub">估算损失</div>
+  </div>
+  <div class="kpi semi">
+    <div class="label">半成品（待转加工）</div>
+    <div class="value" id="kpiSemi">0</div>
+    <div class="sub">需转下一工序部门</div>
+  </div>
+</div>
+
+<div class="card">
+  <h2>
+    库存明细 · 按保质期预警
+    <span class="filters" id="filters">
+      <button class="active" data-f="all">全部状态</button>
+      <button data-f="warn">临期 ≤3天</button>
+      <button data-f="danger">已过期</button>
+      <button data-f="ok">正常</button>
+    </span>
+  </h2>
+  <div class="search-row">
+    <input id="stockSearch" type="text" placeholder="🔍 搜索产品 / 规格 / 部门 / 客户 / 批次…" autocomplete="off">
+    <button class="btn-clear hidden" id="searchClear" onclick="clearSearch()">✕ 清除</button>
+  </div>
+  <div class="search-hint" id="searchHint"></div>
+  <div class="note" style="margin:0 0 12px">当前在库 = 期初 + 今日报数 − 今日出库（与车间报数系统实时同步，出库自动扣减）</div>
+  <div class="legend-colors" id="deptLegend"></div>
+  <div class="type-filters" id="typeFilters">
+    <button class="active" data-t="all">全部类型</button>
+    <button data-t="成品">成品</button>
+    <button data-t="半成品">半成品</button>
+  </div>
+  <table id="stockTable">
+    <thead>
+      <tr>
+        <th>规格</th><th>批次</th><th>生产部门</th><th>客户</th><th>当前在库</th><th>今日出库</th>
+        <th>生产日期</th><th>到期日</th><th>剩余天数</th><th>状态</th><th>建议动作</th><th></th>
+      </tr>
+    </thead>
+    <tbody></tbody>
+  </table>
+  <div id="stockCards"></div>
+</div>
+
+<div class="card">
+  <h2>各部门今日产出 vs 订单需求</h2>
+  <div class="legend">
+    <span><span class="dot" style="background:var(--green)"></span>产出合理</span>
+    <span><span class="dot" style="background:#E67E22"></span>缺货（需补单）</span>
+    <span><span class="dot" style="background:var(--red)"></span>超产（积压风险）</span>
+    <span style="margin-left:auto">今日总需求 615 件</span>
+  </div>
+  <div class="bars" id="deptBars"></div>
+  <div class="note" style="margin-top:12px">
+    <b>说明：</b>超产部门的产品将进入对应冷库待销；连续 3 天超产 → 系统自动提醒排产主管调整产量。让"打多少"从拍脑袋变成看数据。
+  </div>
+</div>
+
+<div class="card">
+  <h2>客户订单一览（今日产出）</h2>
+  <div class="cust-grid" id="custGrid"></div>
+  <div class="note" style="margin-top:12px">
+    <b>说明：</b>颜色对应<b>生产部门</b>，客户用图标区分（🏨 酒店 · 🎓 学校 · 🏥 医院）。
+  </div>
+</div>
+
+<div class="card">
+  <h2>
+    📋 订单 vs 库存缺口
+    <span style="font-size:12px;color:var(--muted);font-weight:400" id="gapSummary"></span>
+  </h2>
+  <div class="legend">
+    <span><span class="dot" style="background:var(--green)"></span>库存充足</span>
+    <span><span class="dot" style="background:var(--red)"></span>缺口 · 需补产</span>
+    <span style="margin-left:auto">缺口 = 待交付订单 − 当前在库</span>
+  </div>
+  <div id="gapBox"></div>
+  <div class="note" style="margin-top:12px">
+    <b>说明：</b>按待交付订单（待生产 + 生产中）对比当前在库（期初 + 今日报数 − 今日出库）。红色 = 现有库存不够交，需马上补产；绿色 = 库存够用。交期越近越优先。
+  </div>
+</div>
+
+<div class="card">
+  <h2>
+    🚀 补产建议
+    <span style="font-size:12px;color:var(--muted);font-weight:400" id="suggestSummary"></span>
+  </h2>
+  <div class="legend">
+    <span><span class="dot" style="background:var(--red)"></span>🔴 紧急：今日到期 / 已超期</span>
+    <span><span class="dot" style="background:var(--yellow)"></span>常规</span>
+  </div>
+  <div id="suggestBox"></div>
+  <div class="note" style="margin-top:12px">
+    <b>说明：</b>由缺口看板自动生成——需要补产的产品按最早交期排序，红色优先安排。主管照单安排车间加产，报数后库存自动更新，缺口自动关闭。
+  </div>
+</div>
+
+<div class="card">
+  <h2>🗓️ 公共假日 · 备货排产提醒</h2>
+  <div class="note" style="margin-bottom:10px">
+    <b>新加坡 2026 官方公共假日（MOM）：</b>节假日前后酒店/学校需求上升，建议提前 1~2 周按 1.2~1.5 倍备货，避免临时缺货。
+  </div>
+  <div id="holidayBox"></div>
+</div>
+
+<div class="card">
+  <h2>这套系统怎么运作</h2>
+  <div class="note">
+    <b>① 21冷库专仓：</b>21车间（蛋糕产品线：NY CHEESE / RED VELVET / BLACK VELVET / BUTTER SP / CHOC FUDGE / muffin / banana loaf 等）独立核算库存、临期、过期。<br>
+    <b>② 每日盘点 5 分钟：</b>21车间主管在「21车间报数系统」登记当日产量（或扫码入库），手机/平板即可。<br>
+    <b>③ 自动预警：</b>保质期 ≤3 天自动标黄（建议促销/打折），过期自动标红（需处理），老板不用进冷库。<br>
+    <b>④ 数据闭环：</b>报数入库 → 出库扣减 → 订单缺口 → 补产建议，全部自动联动。<br>
+    <b>⑤ 降低成本：</b>减少"打多→积压→过期→丢弃"的损耗，也减少"打少→缺货→紧急补单"的浪费。
+  </div>
+</div>
+
+<script>
+// —— 与车间报数系统共享 localStorage（同 origin silentxx.com，冷库只读不写）——
+// V2.0.0：与总版共用同一套 key（数据互通），本页只显示 21 车间库存（stock 数组即 21 车间行）
+const REPORTS_KEY = 'tcf_reports_demo_v11';
+const OUTBOUND_KEY = 'tcf_outbound_demo_v3';
+const ORDER_KEY = 'tcf_orders_demo_v2';
+function localDate(d) {
+  const y = d.getFullYear();
+  const m = String(d.getMonth()+1).padStart(2,'0');
+  const day = String(d.getDate()).padStart(2,'0');
+  return `${y}-${m}-${day}`;
+}
+const todayStr = () => localDate(new Date());
+function loadShared(key) {
+  try {
+    const raw = localStorage.getItem(key);
+    return raw ? JSON.parse(raw) : [];
+  } catch (e) { return []; }
+}
+// 报数(入库) + 出库 + 订单记录，来自 21车间报数系统（加载时读取；30s 定时重新拉取）
+let sharedReports = loadShared(REPORTS_KEY);
+let sharedOutbound = loadShared(OUTBOUND_KEY);
+let sharedOrders = loadShared(ORDER_KEY);
+function refreshShared() {
+  sharedReports = loadShared(REPORTS_KEY);
+  sharedOutbound = loadShared(OUTBOUND_KEY);
+  sharedOrders = loadShared(ORDER_KEY);
+}
+
+// 部门颜色（21车间专属：红色）
+const DEPT_COLORS = {
+  '21车间':            '#DC2626',
+};
+
+// 客户图标（按类型区分风格）
+const CUST_ICONS = { 'MBS':'🏨', '香格里拉':'🏨', 'fh':'🏨', 'pp':'🏨', '学校':'🎓', '医院':'🏥' };
+
+// 半成品清单：21车间无半成品（蛋糕线均为成品）
+const SEMI_FINISHED = {};
+const prodType = (r) => r.type || '成品';
+const nextDept = (r) => r.type === '半成品' ? (r.target || '下一工序') : null;
+const coldStorage = (dept) => dept.split(' · ')[0].replace('车间', '冷库');
+
+// 21冷库真实库存（2026-08-26）：成品区 + 半成品待领区
+// days: 成品=保质期剩余天数；半成品=领用窗口剩余（7 天保质期 FEFO）
+const stock = [
+  // —— 成品（直接出货）——
+  { cat:'Japan Cheese', spec:'7" 350g', b:'B20260822-01', dept:'21车间', cust:'MBS', qty:12, prod:'08-22', exp:'08-27', days:4, status:'ok', type:'成品', target:'', storage:'21' },
+  { cat:'Japan Cheese', spec:'8" 600g', b:'B20260828-02', dept:'21车间', cust:'MBS', qty:6, prod:'08-28', exp:'09-02', days:5, status:'ok', type:'成品', target:'', storage:'21' },
+  { cat:'Oreo Cheese', spec:'9cm 120g', b:'B20260823-02', dept:'21车间', cust:'MBS', qty:25, prod:'08-23', exp:'08-28', days:5, status:'ok', type:'成品', target:'', storage:'21' },
+  { cat:'Mini Banana For MBS', spec:'1box*84nos', b:'B20260824-03', dept:'21车间', cust:'MBS', qty:20, prod:'08-24', exp:'08-28', days:4, status:'ok', type:'成品', target:'', storage:'21' },
+  { cat:'Mini Banana (N)', spec:'1box*84nos', b:'B20260824-31', dept:'21车间', cust:'07小敏', qty:12, prod:'08-24', exp:'08-29', days:5, status:'ok', type:'半成品', target:'07小敏', storage:'21' },
+  { cat:'Mini Marble', spec:'1box*84nos', b:'B20260824-32', dept:'21车间', cust:'07', qty:10, prod:'08-24', exp:'08-29', days:5, status:'ok', type:'半成品', target:'07', storage:'21' },
+  { cat:'Vanilla SP', spec:'750g', b:'B20260824-04', dept:'21车间', cust:'香格里拉', qty:15, prod:'08-24', exp:'08-26', days:2, status:'warn', type:'成品', target:'', storage:'21' },
+  { cat:'Banana Loaf', spec:'400g', b:'B20260823-05', dept:'21车间', cust:'医院', qty:18, prod:'08-23', exp:'08-27', days:3, status:'warn', type:'成品', target:'', storage:'21' },
+  { cat:'Fruit Cake Shangri-La', spec:'380g', b:'B20260822-07', dept:'21车间', cust:'香格里拉', qty:10, prod:'08-22', exp:'08-30', days:6, status:'ok', type:'成品', target:'', storage:'21' },
+  { cat:'Vanilla Sponge', spec:'900g 3cm', b:'B20260824-08', dept:'21车间', cust:'香格里拉', qty:8, prod:'08-24', exp:'08-27', days:3, status:'warn', type:'成品', target:'', storage:'21' },
+  // —— 半成品：待 07 切蛋糕领用 ——
+  { cat:'Red Velvet', spec:'3000g', b:'B20260824-25', dept:'21车间', cust:'07', qty:6, prod:'08-24', exp:'08-28', days:4, status:'ok', type:'半成品', target:'07', storage:'21' },
+  { cat:'NY Cheese', spec:'4000g', b:'B20260823-26', dept:'21车间', cust:'07', qty:4, prod:'08-23', exp:'08-28', days:5, status:'ok', type:'半成品', target:'07', storage:'21' },
+  { cat:'Choc Fudge', spec:'3450g', b:'B20260824-27', dept:'21车间', cust:'07', qty:5, prod:'08-24', exp:'08-27', days:3, status:'warn', type:'半成品', target:'07', storage:'21' },
+  { cat:'Oreo Cheese', spec:'4400g', b:'B20260820-09', dept:'21车间', cust:'07', qty:5, prod:'08-20', exp:'08-27', days:3, status:'warn', type:'半成品', target:'07', storage:'21' },
+  { cat:'Toffee Cake', spec:'3300g', b:'B20260821-10', dept:'21车间', cust:'07', qty:3, prod:'08-21', exp:'08-28', days:4, status:'ok', type:'半成品', target:'07', storage:'21' },
+  { cat:'Plain Butter Cake', spec:'3800g', b:'B20260819-11', dept:'21车间', cust:'07', qty:4, prod:'08-19', exp:'08-26', days:2, status:'warn', type:'半成品', target:'07', storage:'21' },
+  { cat:'Marble Butter Cake', spec:'3800g', b:'B20260818-12', dept:'21车间', cust:'07', qty:3, prod:'08-18', exp:'08-25', days:1, status:'warn', type:'半成品', target:'07', storage:'21' },
+  // —— 半成品：待 07小敏 / 07小黑 ——
+  { cat:'AF Rainbow', spec:'6" 300g', b:'B20260821-13', dept:'21车间', cust:'07小敏', qty:3, prod:'08-21', exp:'08-28', days:4, status:'ok', type:'半成品', target:'07小敏', storage:'21' },
+  { cat:'Almond Joconde', spec:'900g', b:'B20260820-14', dept:'21车间', cust:'07小黑', qty:4, prod:'08-20', exp:'08-27', days:3, status:'warn', type:'半成品', target:'07小黑', storage:'21' },
+  { cat:'Pandan Chiffion 杯装', spec:'小杯', b:'B20260823-15', dept:'21车间', cust:'07小黑', qty:10, prod:'08-23', exp:'08-30', days:6, status:'ok', type:'半成品', target:'07小黑', storage:'07' },
+  { cat:'Red Velvet', spec:'Iron Cup', b:'B20260824-28', dept:'21车间', cust:'07小黑', qty:18, prod:'08-24', exp:'08-30', days:6, status:'ok', type:'半成品', target:'07小黑', storage:'07' },
+  { cat:'Watami', spec:'3300g', b:'B20260823-29', dept:'21车间', cust:'07', qty:4, prod:'08-23', exp:'08-28', days:5, status:'ok', type:'半成品', target:'07', storage:'21' },
+  { cat:'Watami', spec:'6" 350g', b:'B20260824-30', dept:'21车间', cust:'07小敏', qty:6, prod:'08-24', exp:'08-29', days:5, status:'ok', type:'半成品', target:'07小敏', storage:'21' },
+  // —— 半成品：待 08 点心·打奶油 ——
+  { cat:'Chocolate SP', spec:'750g', b:'B20260823-16', dept:'21车间', cust:'08', qty:12, prod:'08-23', exp:'08-26', days:2, status:'warn', type:'半成品', target:'08', storage:'21' },
+  { cat:'Mango SP', spec:'770g', b:'B20260822-17', dept:'21车间', cust:'08', qty:10, prod:'08-22', exp:'08-27', days:3, status:'warn', type:'半成品', target:'08', storage:'21' },
+  { cat:'Red SP', spec:'750g', b:'B20260824-18', dept:'21车间', cust:'08', qty:8, prod:'08-24', exp:'08-28', days:4, status:'ok', type:'半成品', target:'08', storage:'21' },
+  { cat:'Oreo Cheese', spec:'6" 500g', b:'B20260823-19', dept:'21车间', cust:'08', qty:4, prod:'08-23', exp:'08-28', days:5, status:'ok', type:'半成品', target:'08', storage:'21' },
+  // —— 半成品：06 慕斯（当天直取，短存）——
+  { cat:'Macha Sponge', spec:'830g', b:'B20260824-20', dept:'21车间', cust:'06', qty:8, prod:'08-24', exp:'08-28', days:4, status:'ok', type:'半成品', target:'06', storage:'直取' },
+  { cat:'Vanilla Sponge', spec:'750g', b:'B20260824-21', dept:'21车间', cust:'06', qty:12, prod:'08-24', exp:'08-28', days:4, status:'ok', type:'半成品', target:'06', storage:'直取' },
+  { cat:'Soft Sponge', spec:'850g', b:'B20260823-22', dept:'21车间', cust:'06', qty:10, prod:'08-23', exp:'08-27', days:3, status:'warn', type:'半成品', target:'06', storage:'直取' },
+  // —— 半成品：Black Velvet（新增 2026-08-26）——
+  { cat:'Black Velvet', spec:'3200g', b:'B20260824-23', dept:'21车间', cust:'06', qty:8, prod:'08-24', exp:'08-28', days:4, status:'ok', type:'半成品', target:'06', storage:'直取' },
+  { cat:'Black Velvet', spec:'1700g', b:'B20260823-24', dept:'21车间', cust:'07', qty:6, prod:'08-23', exp:'08-28', days:5, status:'ok', type:'半成品', target:'07', storage:'21' },
+];
+
+// —— 动态库存：当前在库 = 期初(qty) + 今日报数 - 今日出库（与车间报数系统联动）——
+// stock[].qty 语义 = 期初基准（今日生产入库前已有的库存快照）
+const stockKey = (r) => r.dept + '|' + (r.spec ? `${r.cat} ${r.spec}` : r.cat);
+const recKey = (x) => x.dept + '|' + x.product;
+function madeToday(r) {
+  const k = stockKey(r);
+  return sharedReports.filter(x => x.date === todayStr() && recKey(x) === k).reduce((s, x) => s + x.qty, 0);
+}
+function outToday(r) {
+  const k = stockKey(r);
+  return sharedOutbound.filter(x => x.date === todayStr() && recKey(x) === k).reduce((s, x) => s + x.qty, 0);
+}
+const curQty = (r) => r.qty + madeToday(r) - outToday(r);
+
+// —— 缺口聚合（renderGap / renderSuggest 共用）：缺口 = 待交付订单 - 当前在库 ——
+function getGaps() {
+  const stockIndex = {};
+  stock.forEach(r => { stockIndex[stockKey(r)] = r; });
+  const gap = {};
+  sharedOrders.filter(o => o.status === '待生产' || o.status === '生产中').forEach(o => {
+    const k = o.dept + '|' + o.product;
+    if (!gap[k]) gap[k] = { dept: o.dept, product: o.product, need: 0, due: o.due };
+    gap[k].need += o.qty;
+    if (o.due < gap[k].due) gap[k].due = o.due;
+  });
+  return Object.values(gap).map(g => {
+    const r = stockIndex[g.dept + '|' + g.product];
+    const cur = r ? curQty(r) : 0;
+    return Object.assign({}, g, { cur, diff: g.need - cur });
+  });
+}
+
+function renderGap() {
+  const box = document.getElementById('gapBox');
+  const summary = document.getElementById('gapSummary');
+  const td = todayStr();
+  const entries = getGaps();
+  if (!entries.length) {
+    box.innerHTML = '<div class="empty">暂无待交付订单 🎉</div>';
+    summary.textContent = '';
+    return;
+  }
+  entries.sort((a, b) => (a.due < b.due ? -1 : a.due > b.due ? 1 : b.need - a.need));
+  let totalGap = 0, urgent = 0;
+  let html = '<div style="overflow-x:auto"><table><thead><tr><th>产品</th><th>订单需求</th><th>当前在库</th><th>缺口</th><th>最早交期</th><th>状态</th></tr></thead><tbody>';
+  entries.forEach(g => {
+    const diff = g.diff;
+    if (diff > 0) totalGap += diff;
+    const overdue = g.due < td;
+    if (diff > 0 && (overdue || g.due === td)) urgent++;
+    const dueTxt = overdue
+      ? '<span class="due-badge over">已超期</span>'
+      : (g.due === td ? '<span class="due-badge today">今日</span>' : `<span class="due-badge ok">${g.due}</span>`);
+    const statusTxt = diff > 0
+      ? `<span class="tag danger">需补产 ${diff} 件</span>`
+      : '<span class="tag ok">库存充足</span>';
+    html += `<tr>
+      <td>${g.product}<div style="font-size:11px;color:var(--muted);margin-top:2px">${deptTag(g.dept)}</div></td>
+      <td><b>${g.need}</b> 件</td>
+      <td>${g.cur} 件</td>
+      <td>${diff > 0 ? `<b style="color:var(--red)">${diff}</b> 件` : '<span style="color:var(--muted)">—</span>'}</td>
+      <td>${dueTxt}</td>
+      <td>${statusTxt}</td>
+    </tr>`;
+  });
+  box.innerHTML = html + '</tbody></table></div>';
+  summary.textContent = `${entries.length} 个产品待交付 · 缺口 ${totalGap} 件 · 紧急 ${urgent} 单`;
+}
+
+// —— 补产建议：由缺口自动生成，按部门分组，交期紧的优先 ——
+function renderSuggest() {
+  const box = document.getElementById('suggestBox');
+  const summary = document.getElementById('suggestSummary');
+  const td = todayStr();
+  const need = getGaps().filter(g => g.diff > 0);
+  if (!need.length) {
+    box.innerHTML = '<div class="empty">所有订单库存充足，无需补产 🎉</div>';
+    summary.textContent = '';
+    return;
+  }
+  need.sort((a, b) => (a.due < b.due ? -1 : a.due > b.due ? 1 : b.diff - a.diff));
+  const byDept = {};
+  need.forEach(g => { (byDept[g.dept] = byDept[g.dept] || []).push(g); });
+  let total = 0, urgentN = 0;
+  let html = '';
+  Object.entries(byDept).forEach(([dept, items]) => {
+    const deptTotal = items.reduce((s, g) => s + g.diff, 0);
+    total += deptTotal;
+    html += `<div class="sug-dept"><span class="dot" style="background:${DEPT_COLORS[dept] || '#888'}"></span><b>${dept}</b><span class="g-meta">${items.length} 个产品 · 补 ${deptTotal} 件</span></div>`;
+    html += '<div style="overflow-x:auto"><table><thead><tr><th>产品</th><th>需补</th><th>最早交期</th><th>优先级</th></tr></thead><tbody>';
+    items.forEach(g => {
+      const overdue = g.due < td;
+      if (overdue || g.due === td) urgentN++;
+      const dueTxt = overdue
+        ? '<span class="due-badge over">已超期</span>'
+        : (g.due === td ? '<span class="due-badge today">今日</span>' : `<span class="due-badge ok">${g.due}</span>`);
+      const pri = (overdue || g.due === td) ? '<span class="tag danger">🔴 紧急</span>' : '<span class="tag warn">常规</span>';
+      html += `<tr><td><b>${g.product}</b></td><td><b style="color:var(--red)">${g.diff}</b> 件</td><td>${dueTxt}</td><td>${pri}</td></tr>`;
+    });
+    html += '</tbody></table></div>';
+  });
+  box.innerHTML = html;
+  summary.textContent = `${need.length} 个产品需补产 · 共 ${total} 件 · 紧急 ${urgentN} 单`;
+}
+
+// —— 新加坡 2026 官方公共假日（MOM 官网），临近 14 天触发备货提醒 ——
+const SG_HOLIDAYS_2026 = [
+  { date: '2026-01-01', name: '元旦' },
+  { date: '2026-02-17', name: '农历新年（2/18 初二）' },
+  { date: '2026-03-21', name: '开斋节' },
+  { date: '2026-04-03', name: '耶稣受难日' },
+  { date: '2026-05-01', name: '劳动节' },
+  { date: '2026-05-27', name: '哈芝节' },
+  { date: '2026-05-31', name: '卫塞节（6/1 补假）' },
+  { date: '2026-08-09', name: '国庆日（8/10 补假）' },
+  { date: '2026-11-08', name: '屠妖节（11/9 补假）' },
+  { date: '2026-12-25', name: '圣诞节' },
+];
+function renderHolidays() {
+  const box = document.getElementById('holidayBox');
+  const td = todayStr();
+  const future = SG_HOLIDAYS_2026.filter(h => h.date >= td).sort((a, b) => a.date.localeCompare(b.date));
+  if (!future.length) { box.innerHTML = '<div class="empty">2026 公共假日已全部结束</div>'; return; }
+  const next = future[0];
+  const days = Math.round((new Date(next.date + 'T00:00:00') - new Date(td + 'T00:00:00')) / 86400000);
+  let html = `<div class="holiday-next"><b>下一个公共假日：${next.name}</b><span class="due-badge ${days <= 14 ? 'over' : 'ok'}">${days} 天后</span></div>`;
+  if (days <= 14) {
+    html += `<div class="note" style="margin-top:8px">🛎️ <b>临近节假日：</b>建议按 1.2~1.5 倍常规量提前备货，酒店/学校订单通常会提前增加。</div>`;
+  }
+  html += '<div style="overflow-x:auto;margin-top:10px"><table><thead><tr><th>日期</th><th>假日</th><th>状态</th></tr></thead><tbody>';
+  future.forEach(h => {
+    const isNext = h.date === next.date;
+    const status = h.date === td ? '今日' : (isNext ? '下一个' : '');
+    html += `<tr><td>${h.date}</td><td>${h.name}</td><td>${status ? `<span class="tag ${isNext ? 'warn' : 'ok'}">${status}</span>` : ''}</td></tr>`;
+  });
+  html += '</tbody></table></div>';
+  box.innerHTML = html;
+}
+
+const statusText = { ok:'正常', warn:'临期·尽快销售', danger:'已过期·需处理' };
+const statusClass = { ok:'ok', warn:'warn', danger:'danger' };
+
+// 客户今日产出（与 21车间报数系统对齐：MBS 127 / 香格里拉 105 / fh 28 / pp 50 / 学校 280 / 医院 40）
+const customers = [
+  { name:'MBS',      icon:'🏨', qty:127 },
+  { name:'香格里拉', icon:'🏨', qty:105 },
+  { name:'fh',       icon:'🏨', qty:28 },
+  { name:'pp',       icon:'🏨', qty:50 },
+  { name:'学校',     icon:'🎓', qty:280 },
+  { name:'医院',     icon:'🏥', qty:40 },
+];
+
+// 筛选状态
+let curStorage = 'all';
+let curStatus = 'all';
+let curType = 'all';
+let curQuery = '';
+const collapsedSet = new Set(); // 手动收起的组
+
+function deptTag(dept) {
+  const c = DEPT_COLORS[dept] || '#888';
+  return `<span class="tag-dept" style="background:${c}18;color:${c};border:1px solid ${c}40">${dept}</span>`;
+}
+function custTag(cust) {
+  const ic = CUST_ICONS[cust] || '📦';
+  return `<span class="tag-cust">${ic} ${cust}</span>`;
+}
+function semiTag(r) {
+  return r.type === '半成品' ? ` <span class="tag-semi-mini">半成品</span>` : '';
+}
+// 流转标签：半成品 →目标部门 · 入库位置；成品绿色标签
+function flowTag(r) {
+  if (r.type === '半成品') {
+    let s = '半成品';
+    if (r.target) s += ' → ' + r.target;
+    if (r.storage === '直取') s += ' · 当天直取';
+    else if (r.storage && r.storage !== '21' && r.storage !== '07') s += ' · ' + r.storage;
+    return ` <span class="tag-semi-mini">${s}</span>`;
+  }
+  return ' <span class="tag-finished">成品 → 可出货</span>';
+}
+function actionFor(r) {
+  if (r.type === '半成品') return `待 ${r.target || '下一工序'} 领用加工`;
+  return { ok:'切分 → 包装 → 出货', warn:'建议打折促销', danger:'盘点后处理' }[r.status];
+}
+function matchQuery(r) {
+  if (!curQuery) return true;
+  const q = curQuery.toLowerCase();
+  const hay = [r.cat, r.spec || '', r.dept, r.cust, r.target || '', r.b].join(' ').toLowerCase();
+  return hay.includes(q);
+}
+
+function visibleGroups() {
+  const groups = [];
+  const index = {};
+  stock.forEach(r => {
+    if (curStorage !== 'all' && coldStorage(r.dept) !== curStorage) return;
+    if (curStatus !== 'all' && r.status !== curStatus) return;
+    if (curType !== 'all' && prodType(r) !== curType) return;
+    if (!matchQuery(r)) return;
+    const key = r.cat + '|' + r.dept;
+    if (!index[key]) {
+      index[key] = { key, cat: r.cat, dept: r.dept, rows: [] };
+      groups.push(index[key]);
+    }
+    index[key].rows.push(r);
+  });
+  return groups;
+}
+
+function renderKPIs() {
+  const rows = stock.filter(r => curStorage === 'all' || coldStorage(r.dept) === curStorage);
+  const total = rows.reduce((s, r) => s + curQty(r), 0);
+  const warn = rows.filter(r => r.status === 'warn').length;
+  const danger = rows.filter(r => r.status === 'danger').length;
+  const semi = rows.filter(r => prodType(r) === '半成品').length;
+  document.getElementById('kpiTotal').textContent = total;
+  document.getElementById('kpiValue').textContent = 'S$' + Math.round(total * 8).toLocaleString('en-SG');
+  document.getElementById('kpiWarn').textContent = warn;
+  document.getElementById('kpiDanger').textContent = danger;
+  document.getElementById('kpiSemi').textContent = semi;
+  document.getElementById('kpiLabel').textContent = '21冷库';
+}
+
+function renderStock() {
+  const tb = document.querySelector('#stockTable tbody');
+  const cardsEl = document.getElementById('stockCards');
+  tb.innerHTML = '';
+  cardsEl.innerHTML = '';
+  const groups = visibleGroups();
+
+  // 搜索提示
+  const hint = document.getElementById('searchHint');
+  if (curQuery) {
+    const n = groups.reduce((s, g) => s + g.rows.length, 0);
+    hint.textContent = n ? `🔍 “${curQuery}” 找到 ${n} 条记录` : `🔍 “${curQuery}” 没有匹配`;
+  } else {
+    hint.textContent = '';
+  }
+  document.getElementById('searchClear').classList.toggle('hidden', !curQuery);
+
+  if (!groups.length) {
+    tb.innerHTML = '<tr><td colspan="12" class="empty">当前筛选下没有记录</td></tr>';
+    cardsEl.innerHTML = '<div class="empty">当前筛选下没有记录</div>';
+    return;
+  }
+
+  let cardsHtml = '';
+  groups.forEach(g => {
+    const total = g.rows.reduce((s, r) => s + r.qty, 0);
+    const meta = g.rows.length > 1 ? `${g.rows.length} 规格 · ${total} 件` : `${total} 件`;
+    const gCollapsed = !curQuery && collapsedSet.has(g.key);
+
+    // —— 桌面表格 ——
+    const hrow = document.createElement('tr');
+    hrow.className = 'group-header' + (gCollapsed ? ' collapsed' : '');
+    hrow.dataset.group = g.key;
+    hrow.innerHTML = `<td colspan="12"><span class="g-arrow">${gCollapsed ? '▸' : '▾'}</span><b>${g.cat}</b>${flowTag(g.rows[0])}<span class="g-meta">${meta}</span></td>`;
+    tb.appendChild(hrow);
+    g.rows.forEach(r => {
+      const srow = document.createElement('tr');
+      srow.className = 'group-row' + (gCollapsed ? ' hidden' : '');
+      srow.dataset.group = g.key;
+      srow.dataset.status = r.status;
+      const dayTxt = r.days <= 0 ? (r.type === '半成品' ? '窗口已过' : '已过期') : (r.type === '半成品' ? `窗口剩 ${r.days} 天` : r.days + ' 天');
+      srow.innerHTML = `
+        <td class="spec-muted">${r.spec || '—'}</td><td>${r.b}</td><td>${deptTag(r.dept)}</td><td>${custTag(r.cust)}</td>
+        <td title="期初${r.qty} + 报数${madeToday(r)} - 出库${outToday(r)}"><b>${curQty(r)}</b></td>
+        <td>${outToday(r) ? `<b style="color:var(--red)">${outToday(r)}</b>` : '—'}</td>
+        <td>${r.prod}</td><td>${r.exp}</td>
+        <td style="color:${r.days<=0?'var(--red)':r.days<=3?'var(--yellow)':'var(--green)'};font-weight:700">${dayTxt}</td>
+        <td><span class="tag ${statusClass[r.status]}">${statusText[r.status]}</span></td>
+        <td>${actionFor(r)}</td>
+        <td>${r.status==='warn'||r.status==='danger' ? `<button class="btn-mini" onclick="markDone(this)">标记已处理</button>` : ''}</td>`;
+      tb.appendChild(srow);
+    });
+
+    // —— 移动端卡片 ——
+    const dayColor = (d) => d<=0 ? 'var(--red)' : d<=3 ? 'var(--yellow)' : 'var(--green)';
+    const dayText = (d, r) => d<=0 ? (r.type === '半成品' ? '窗口已过' : '已过期') : (r.type === '半成品' ? `窗口剩 ${d} 天` : `剩 ${d} 天`);
+    cardsHtml += `<div class="m-group">`
+      + `<div class="m-group-header${gCollapsed ? ' collapsed' : ''}" data-group="${g.key}"><span class="g-arrow">${gCollapsed ? '▸' : '▾'}</span><b>${g.cat}</b>${flowTag(g.rows[0])}<span class="g-meta">${meta}</span></div>`
+      + `<div class="m-group-rows${gCollapsed ? ' hidden' : ''}" data-group="${g.key}">`;
+    g.rows.forEach(r => {
+      cardsHtml += `<div class="m-card">`
+        + `<div class="m-line1"><span class="m-spec">${r.spec || '—'}</span><b class="m-qty">${curQty(r)} 件</b></div>`
+        + `<div class="m-line2">${deptTag(r.dept)}${custTag(r.cust)}</div>`
+        + `<div class="m-line3"><span class="m-batch">${r.b}</span><span>${r.prod} → ${r.exp}</span><span class="m-days" style="color:${dayColor(r.days)}">${dayText(r.days, r)}</span>${outToday(r) ? `<span style="color:var(--red);font-weight:600">🚚 出库 ${outToday(r)}</span>` : ''}</div>`
+        + `<div class="m-line4"><span class="tag ${statusClass[r.status]}">${statusText[r.status]}</span><span class="m-action">${actionFor(r)}</span>${r.status==='warn'||r.status==='danger' ? `<button class="btn-mini" onclick="markDone(this)">标记已处理</button>` : ''}</div>`
+        + `</div>`;
+    });
+    cardsHtml += `</div></div>`;
+  });
+  cardsEl.innerHTML = cardsHtml;
+}
+
+function markDone(btn) {
+  btn.classList.add('done');
+  btn.textContent = '✓ 已处理';
+  btn.disabled = true;
+  const row = btn.closest('tr') || btn.closest('.m-card');
+  const tag = row && row.querySelector('.tag');
+  if (tag) { tag.textContent = '已处理'; tag.className = 'tag ok'; }
+}
+
+// 分组折叠/展开（桌面表格 + 移动卡片同步）
+function toggleGroup(key) {
+  if (collapsedSet.has(key)) collapsedSet.delete(key); else collapsedSet.add(key);
+  const collapsed = collapsedSet.has(key);
+  document.querySelectorAll(`#stockTable tr.group-header[data-group="${CSS.escape(key)}"]`).forEach(h => {
+    h.classList.toggle('collapsed', collapsed);
+    const a = h.querySelector('.g-arrow'); if (a) a.textContent = collapsed ? '▸' : '▾';
+  });
+  document.querySelectorAll(`#stockTable tr.group-row[data-group="${CSS.escape(key)}"]`).forEach(r => r.classList.toggle('hidden', collapsed));
+  document.querySelectorAll(`.m-group-header[data-group="${CSS.escape(key)}"]`).forEach(h => {
+    h.classList.toggle('collapsed', collapsed);
+    const a = h.querySelector('.g-arrow'); if (a) a.textContent = collapsed ? '▸' : '▾';
+  });
+  document.querySelectorAll(`.m-group-rows[data-group="${CSS.escape(key)}"]`).forEach(r => r.classList.toggle('hidden', collapsed));
+}
+document.querySelector('#stockTable tbody').addEventListener('click', (e) => {
+  const header = e.target.closest('tr.group-header');
+  if (!header) return;
+  toggleGroup(header.dataset.group);
+});
+document.getElementById('stockCards').addEventListener('click', (e) => {
+  const header = e.target.closest('.m-group-header');
+  if (!header) return;
+  toggleGroup(header.dataset.group);
+});
+
+// 搜索
+const stockSearch = document.getElementById('stockSearch');
+stockSearch.addEventListener('input', () => {
+  curQuery = stockSearch.value.trim();
+  renderStock();
+});
+function clearSearch() {
+  stockSearch.value = '';
+  curQuery = '';
+  renderStock();
+}
+
+function refresh() {
+  renderKPIs();
+  renderStock();
+  renderGap();
+  renderSuggest();
+  renderHolidays();
+}
+
+// 21冷库版：无冷库切换器（仅 21冷库），curStorage 固定 'all'
+document.querySelectorAll('#filters button').forEach(b => {
+  b.addEventListener('click', () => {
+    document.querySelectorAll('#filters button').forEach(x => x.classList.remove('active'));
+    b.classList.add('active');
+    curStatus = b.dataset.f;
+    renderStock();
+  });
+});
+document.querySelectorAll('#typeFilters button').forEach(b => {
+  b.addEventListener('click', () => {
+    document.querySelectorAll('#typeFilters button').forEach(x => x.classList.remove('active'));
+    b.classList.add('active');
+    curType = b.dataset.t;
+    renderStock();
+  });
+});
+
+// 部门颜色图例
+document.getElementById('deptLegend').innerHTML =
+  Object.entries(DEPT_COLORS).map(([n, c]) => `<span><span class="dot" style="background:${c}"></span>${n}</span>`).join('');
+
+// 各部门产出 vs 订单（21车间专属）
+const depts = [
+  { name:'21车间',             made:630, need:615 },
+];
+const barsEl = document.getElementById('deptBars');
+depts.forEach(d => {
+  const rawPct = Math.round(d.made / d.need * 100);
+  const pct = Math.min(100, rawPct);
+  let cls, note, noteColor;
+  if (rawPct >= 105) {
+    cls = 'over';
+    note = `超产 ${rawPct-100}% · 关注积压`;
+    noteColor = 'var(--red)';
+  } else if (rawPct <= 95) {
+    cls = 'short';
+    note = `缺货 ${100-rawPct}% · 需补单`;
+    noteColor = '#E67E22';
+  } else {
+    cls = 'normal';
+    note = '产出合理';
+    noteColor = 'var(--green)';
+  }
+  const c = DEPT_COLORS[d.name] || '#888';
+  const row = document.createElement('div');
+  row.className = 'bar-row';
+  row.innerHTML = `
+    <span><span class="dept-dot" style="background:${c}"></span><b>${d.name}</b></span>
+    <div class="bar-track"><div class="bar-fill ${cls}" style="width:${pct}%"></div></div>
+    <span>${d.made} / ${d.need} 件<br><span class="bar-note" style="color:${noteColor}">${note}</span></span>`;
+  barsEl.appendChild(row);
+});
+
+// 客户订单一览
+document.getElementById('custGrid').innerHTML = customers.map(c =>
+  `<div class="cust-chip"><span class="ic">${c.icon}</span><span class="nm">${c.name}</span><span class="qt">${c.qty} 件</span></div>`
+).join('');
+
+refresh();
+
+// 每 30 秒与车间报数系统重新同步（出库/报数/订单变化自动反映到冷库/缺口，无需手动刷新）
+setInterval(() => { refreshShared(); refresh(); }, 30000);
+</script>
+</body>
+</html>

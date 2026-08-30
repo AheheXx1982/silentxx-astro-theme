@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+  <!-- 宣纸米白底 -->
+  <rect width="100" height="100" rx="9" fill="#F6F1E7"/>
+  <!-- 朱红印章主体 -->
+  <rect x="4.5" y="4.5" width="91" height="91" rx="9" fill="#B0342A"/>
+  <!-- 印章内细白边 -->
+  <rect x="14.5" y="14.5" width="71" height="71" rx="5.5" fill="none" stroke="#F6F1E7" stroke-width="1.2"/>
+  <!-- 中央「问」字 -->
+  <text x="50" y="66" font-family="KaiTi, STKaiti, SimSun, serif" font-size="60" fill="#F6F1E7" text-anchor="middle">问</text>
+</svg>

@@ -1,0 +1,54 @@
+---
+import Layout from '../layouts/Layout.astro';
+import Lollipop from '../components/fun/Lollipop.astro';
+import { seoConfig } from '../constants/site-config';
+---
+
+<Layout title={`${seoConfig.title} - 棒棒糖演示`}>
+  <div class="mx-auto max-w-4xl px-4 py-8">
+    <h1 class="mb-8 text-center text-3xl font-bold">棒棒糖演示</h1>
+
+    <div class="mb-12">
+      <h2 class="mb-4 text-2xl font-semibold">电影《功夫》同款棒棒糖</h2>
+      <div class="flex flex-col items-center">
+        <Lollipop size="lg" />
+        <p class="mt-4 text-center text-lg">
+          这是根据您提供的分割图片制作的电影《功夫》同款棒棒糖，完美还原了电影中的经典形象。
+        </p>
+      </div>
+    </div>
+
+    <div class="mb-12">
+      <h2 class="mb-4 text-2xl font-semibold">不同尺寸的棒棒糖</h2>
+      <div class="flex flex-wrap items-end justify-center gap-8">
+        {
+          (['sm', 'md', 'lg'] as const).map((size) => (
+            <div class="flex flex-col items-center">
+              <Lollipop size={size} />
+              <span class="mt-2 text-sm uppercase">{size}</span>
+            </div>
+          ))
+        }
+      </div>
+    </div>
+
+    <div class="mb-12">
+      <h2 class="mb-4 text-2xl font-semibold">无动画效果</h2>
+      <div class="flex flex-wrap justify-center gap-6">
+        <Lollipop animated={false} size="md" />
+        <span class="ml-4 flex items-end">静止的棒棒糖</span>
+      </div>
+    </div>
+
+    <div class="text-center">
+      <h2 class="mb-4 text-2xl font-semibold">电影经典场景重现</h2>
+      <div class="my-8 flex justify-center">
+        <div class="relative">
+          <Lollipop size="lg" />
+          <div class="absolute -bottom-8 left-1/2 -translate-x-1/2 transform text-sm italic">"我想要这个糖..."</div>
+        </div>
+      </div>
+      <p class="mt-4 text-lg">就像周星驰电影《功夫》中的那个经典场景一样，甜蜜而令人难忘。</p>
+    </div>
+  </div>
+</Layout>

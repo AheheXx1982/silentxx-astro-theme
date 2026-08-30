@@ -1,0 +1,173 @@
+---
+interface Props {
+  speed?: number; // 滚动速度，单位：秒
+  lang?: string; // 语言参数
+}
+
+const { speed = 25, lang = 'zh' } = Astro.props;
+
+const financialQuotesZh = [
+  '投资成功与否并非取决于你了解的东西，而在于你能否老老实实地承认你所不知道的东西。——沃伦·巴菲特',
+  '风险来自于你不知道自己在做什么。——沃伦·巴菲特',
+  '时间是优秀企业的朋友，平庸企业的敌人。——沃伦·巴菲特',
+  '投资最重要的不是买好的，而是买得好。——查理·芒格',
+  '在别人贪婪时恐惧，在别人恐惧时贪婪。——沃伦·巴菲特',
+  '市场就像电梯，总是在你最意想不到的时候到达顶楼或地下室。——彼得·林奇',
+  '投资是一场马拉松，而不是短跑。——约翰·博格',
+  '不要把所有鸡蛋放在一个篮子里。——詹姆斯·托宾',
+  '成功的投资需要投资者具备四种能力：分析能力、选择能力、忍耐能力和自知能力。——本杰明·格雷厄姆',
+  '价格是你付出的，价值是你得到的。——沃伦·巴菲特',
+  '投资中最重要的是控制风险，而不是追求高收益。——索罗斯',
+  '市场总是在变化，投资策略也应随之调整。——乔治·索罗斯',
+  '投资的关键在于找到那些被市场低估的资产。——本杰明·格雷厄姆',
+  '长期投资胜过短期投机。——约翰·邓普顿',
+  '投资决策应该基于深入的研究和分析，而不是情绪或猜测。——菲利普·费雪',
+  '最好的投资就是投资自己。——沃伦·巴菲特',
+  '股市短期是投票机，长期是称重机。——本杰明·格雷厄姆',
+  '投资中最重要的是不要亏钱。——沃伦·巴菲特',
+  '市场先生是一个非常情绪化的人，他每天都会报出一个价格，要么高要么低。——本杰明·格雷厄姆',
+  '耐心是投资的第一美德。——查理·芒格',
+  '投资组合中最重要的资产是现金。——约翰·邓普顿',
+  '在投资中，最重要的不是你赚了多少钱，而是你能留住多少钱。——彼得·林奇',
+  '投资的秘诀在于逆向思维。——戴维·德雷曼',
+  '风险来自于你不知道自己在做什么。——沃伦·巴菲特',
+  '投资是一门艺术，而不是科学。——菲利普·费雪',
+  '要想在金融市场中获得成功，首先要学会如何控制自己的情绪。——保罗·都铎·琼斯',
+  '投资的关键在于理解企业的内在价值，并在市场价格低于内在价值时买入。——沃伦·巴菲特',
+  '成功的投资需要独立思考，不要被市场的噪音所干扰。——查理·芒格',
+  '在投资中，复利是最强大的力量之一。——阿尔伯特·爱因斯坦',
+  '投资的首要原则是不要亏钱，第二原则是永远不要忘记第一条。——沃伦·巴菲特',
+  '市场总是在创造机会，关键是要有耐心等待合适的时机。——乔治·索罗斯',
+  '投资不是关于预测市场走势，而是关于理解企业的基本面。——菲利普·费雪',
+  '在投资中，最重要的是保持理性和冷静，不要被贪婪和恐惧所驱使。——约翰·邓普顿',
+  '成功的投资需要长期的视野和坚定的信念。——彼得·林奇',
+  '投资的秘诀在于分散风险，不要把所有的资金都投入到一个领域。——詹姆斯·托宾',
+  '在投资中，要学会从失败中吸取教训，不断改进自己的投资策略。——索罗斯',
+  '投资不是赌博，而是基于深入研究和分析的理性决策。——本杰明·格雷厄姆',
+  '成功的投资者往往是那些能够在市场恐慌时保持冷静的人。——沃伦·巴菲特',
+  '投资中最重要的是要理解自己在做什么，不要盲目跟风。——查理·芒格',
+  '市场的波动是正常的，关键是要有应对策略。——彼得·林奇',
+  '在投资中，时间是最好的朋友，复利是最强大的武器。——约翰·博格',
+  '投资不是一夜暴富的游戏，而是需要长期坚持的过程。——菲利普·费雪',
+  '成功的投资需要不断学习和适应市场的变化。——乔治·索罗斯',
+  '在投资中，要始终保持谦逊，市场总是在变化，没有人能够预测一切。——约翰·邓普顿',
+  '投资的智慧在于知道什么时候买入，什么时候卖出，什么时候持有。——沃伦·巴菲特',
+  '在投资中，最重要的是保护本金，而不是追求高收益。——本杰明·格雷厄姆',
+  '成功的投资者往往是那些能够在别人恐惧时贪婪，在别人贪婪时恐惧的人。——查理·芒格',
+  '投资不是关于你赚了多少钱，而是关于你能否跑赢通胀。——彼得·林奇',
+  '在投资中，要学会独立思考，不要被市场的噪音所迷惑。——索罗斯',
+  '投资的秘诀在于长期持有优质资产，而不是频繁交易。——约翰·博格',
+  '成功的投资需要耐心、纪律和对市场的深刻理解。——菲利普·费雪',
+  '在投资中，要始终保持学习的心态，市场总是在变化。——乔治·索罗斯',
+  '投资不是关于你有多聪明，而是关于你有多理性。——沃伦·巴菲特',
+  '在投资中，要学会控制自己的情绪，不要被市场的波动所影响。——约翰·邓普顿',
+  '成功的投资者往往是那些能够在市场底部买入，顶部卖出的人。——查理·芒格',
+  '投资的智慧在于分散风险，不要把所有的鸡蛋放在一个篮子里。——詹姆斯·托宾',
+  '在投资中，要始终保持谨慎，市场总是在变化，没有人能够预测一切。——本杰明·格雷厄姆',
+  '投资不是关于你赚了多少钱，而是关于你能否长期保持收益。——彼得·林奇',
+  '成功的投资需要坚定的信念和长期的视野。——约翰·博格',
+  '在投资中，要学会从失败中吸取教训，不断改进自己的投资策略。——索罗斯',
+];
+
+// 定义金融领域大咖名言（英文）
+
+const financialQuotesEn = [
+  "It's not how much you know that determines investment success, but rather your ability to honestly admit what you don't know. —— Warren Buffett",
+  "Risk comes from not knowing what you're doing. —— Warren Buffett",
+  'Time is the friend of wonderful companies and the enemy of mediocre ones. —— Warren Buffett',
+  "In investing, it's not about buying good things, but about buying them well. —— Charlie Munger",
+  'Be fearful when others are greedy, and greedy when others are fearful. —— Warren Buffett',
+  'The market is like an elevator, always arriving at the top floor or basement when you least expect it. —— Peter Lynch',
+  'Investing is a marathon, not a sprint. —— John Bogle',
+  "Don't put all your eggs in one basket. —— James Tobin",
+  'Successful investing requires four abilities: analytical ability, selection ability, patience, and self-awareness. —— Benjamin Graham',
+  'Price is what you pay, value is what you get. —— Warren Buffett',
+  'The most important thing in investing is risk control, not pursuing high returns. —— Soros',
+  'The market is always changing, and investment strategies should change accordingly. —— George Soros',
+  'The key to investing is finding assets that are undervalued by the market. —— Benjamin Graham',
+  'Long-term investing beats short-term speculation. —— John Templeton',
+  'Investment decisions should be based on in-depth research and analysis, not emotion or guesswork. —— Philip Fisher',
+  'The best investment is in yourself. —— Warren Buffett',
+  'In the short run, the market is a voting machine, but in the long run, it is a weighing machine. —— Benjamin Graham',
+  'The most important thing in investing is not to lose money. —— Warren Buffett',
+  'Mr. Market is a very emotional person who quotes a price every day, either high or low. —— Benjamin Graham',
+  'Patience is the first virtue in investing. —— Charlie Munger',
+  'The most important asset in an investment portfolio is cash. —— John Templeton',
+  'In investing, the most important thing is not how much money you make, but how much you can keep. —— Peter Lynch',
+  'The secret of investing lies in contrarian thinking. —— David Dreman',
+  "Risk comes from not knowing what you're doing. —— Warren Buffett",
+  'Investing is an art, not a science. —— Philip Fisher',
+  'To succeed in financial markets, you must first learn how to control your emotions. —— Paul Tudor Jones',
+  'The key to investing is understanding the intrinsic value of a company and buying when the market price is below intrinsic value. —— Warren Buffett',
+  'Successful investing requires independent thinking, not being disturbed by market noise. —— Charlie Munger',
+  'In investing, compound interest is one of the most powerful forces. —— Albert Einstein',
+  'The first rule of investing is not to lose money; the second rule is never to forget the first. —— Warren Buffett',
+  'The market is always creating opportunities; the key is to patiently wait for the right moment. —— George Soros',
+  'Investing is not about predicting market movements, but about understanding the fundamentals of a company. —— Philip Fisher',
+  'In investing, the most important thing is to remain rational and calm, not to be driven by greed and fear. —— John Templeton',
+  'Successful investing requires a long-term vision and firm belief. —— Peter Lynch',
+  'The secret of investing is to diversify risk, not to put all your money into one area. —— James Tobin',
+  'In investing, learn to learn from failures and continuously improve your investment strategy. —— Soros',
+  'Investing is not gambling, but rational decision-making based on in-depth research and analysis. —— Benjamin Graham',
+  'Successful investors are often those who can remain calm when the market panics. —— Warren Buffett',
+  'The most important thing in investing is to understand what you are doing, not to follow the crowd blindly. —— Charlie Munger',
+  'Market volatility is normal; the key is to have coping strategies. —— Peter Lynch',
+  'In investing, time is the best friend, and compound interest is the most powerful weapon. —— John Bogle',
+  'Investing is not a get-rich-quick game, but a process that requires long-term persistence. —— Philip Fisher',
+  'Successful investing requires continuous learning and adaptation to market changes. —— George Soros',
+  'In investing, always remain humble; the market is always changing, and no one can predict everything. —— John Templeton',
+  'The wisdom of investing lies in knowing when to buy, when to sell, and when to hold. —— Warren Buffett',
+  'In investing, the most important thing is to protect principal, not to pursue high returns. —— Benjamin Graham',
+  'Successful investors are often those who can be greedy when others are fearful and fearful when others are greedy. —— Charlie Munger',
+  'Investing is not about how much money you make, but about whether you can outpace inflation. —— Peter Lynch',
+  'In investing, learn to think independently, not to be confused by market noise. —— Soros',
+  'The secret of investing is to hold quality assets for the long term, not to trade frequently. —— John Bogle',
+  'Successful investing requires patience, discipline, and a deep understanding of the market. —— Philip Fisher',
+  'In investing, always maintain a learning mindset; the market is always changing. —— George Soros',
+  'Investing is not about how smart you are, but about how rational you are. —— Warren Buffett',
+  'In investing, learn to control your emotions, not to be affected by market fluctuations. —— John Templeton',
+  'Successful investors are often those who can buy at market bottoms and sell at market tops. —— Charlie Munger',
+  'The wisdom of investing lies in diversifying risk, not putting all your eggs in one basket. —— James Tobin',
+  'In investing, always remain cautious; the market is always changing, and no one can predict everything. —— Benjamin Graham',
+  'Investing is not about how much money you make, but about whether you can maintain returns over the long term. —— Peter Lynch',
+  'Successful investing requires firm belief and a long-term vision. —— John Bogle',
+  'In investing, learn to learn from failures and continuously improve your investment strategy. —— Soros',
+];
+
+// 定义哲学类名言（中文）
+
+// 根据语言选择相应的名言列表（主站只保留投资格言）
+const financialQuotes = lang === 'en' ? financialQuotesEn : financialQuotesZh;
+
+// 随机选择一条名言
+const randomQuote = financialQuotes[Math.floor(Math.random() * financialQuotes.length)];
+---
+
+<div class="w-full overflow-hidden py-3">
+  <div class="relative flex whitespace-nowrap">
+    <style is:global>
+      @keyframes marquee {
+        0% {
+          transform: translateX(100%);
+        }
+        100% {
+          transform: translateX(-100%);
+        }
+      }
+
+      .marquee-content {
+        display: inline-block;
+        padding-left: 100%;
+        animation: marquee linear infinite;
+      }
+
+      .marquee-content:hover {
+        animation-play-state: paused;
+      }
+    </style>
+
+    <div class="marquee-content" style={`animation-duration: ${speed}s;`}>
+      <span class="mx-4 text-sm text-gray-600 italic">"{randomQuote}"</span>
+    </div>
+  </div>
+</div>

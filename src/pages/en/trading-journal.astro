@@ -1,0 +1,122 @@
+---
+import Layout from '@layouts/Layout.astro';
+import TwoColumnLayout from '@layouts/TwoColumnLayout.astro';
+import Cover from '@components/ui/cover/Cover.astro';
+import HomeSider from '@components/layout/HomeSider.astro';
+import QuoteMarquee from '@components/fun/QuoteMarquee.astro';
+import TradeStats from '@components/trading/TradeStats.astro';
+import TradeCard from '@components/trading/TradeCard';
+import { getAllPosts } from '@lib/content';
+import type { CollectionEntry } from 'astro:content';
+import type { BlogPost } from 'types/blog';
+
+const lang = 'en';
+
+async function getTradeJournalPosts(lang: string): Promise<CollectionEntry<'blog'>[]> {
+  const posts = await getAllPosts();
+  const filtered = posts.filter((post) => {
+    const postLang = post.data.lang || 'zh';
+    if (postLang !== lang) return false;
+    if (!post.data.trade) return false;
+    return true;
+  });
+  filtered.sort((a, b) => new Date(b.data.date).getTime() - new Date(a.data.date).getTime());
+  return filtered;
+}
+
+async function getTradeStats(lang: string) {
+  const posts = await getTradeJournalPosts(lang);
+  const stats = {
+    totalTrades: posts.length,
+    closedTrades: 0,
+    openTrades: 0,
+    totalPnl: 0,
+    winCount: 0,
+    tickers: new Map<string, number>(),
+    strategies: new Map<string, number>(),
+  };
+  for (const post of posts) {
+    const trade = post.data.trade;
+    if (!trade) continue;
+    if (trade.status === '已平仓' || trade.status === 'Closed') stats.closedTrades++;
+    else stats.openTrades++;
+    const pnlNum = parseFloat(trade.pnl.replace(/[^0-9.-]/g, ''));
+    if (!isNaN(pnlNum)) {
+      stats.totalPnl += pnlNum;
+      if (pnlNum > 0) stats.winCount++;
+    }
+    stats.tickers.set(trade.ticker.toUpperCase(), (stats.tickers.get(trade.ticker) || 0) + 1);
+    stats.strategies.set(trade.strategy, (stats.strategies.get(trade.strategy) || 0) + 1);
+  }
+  return stats;
+}
+
+const tradePosts = await getTradeJournalPosts(lang);
+const stats = await getTradeStats(lang);
+const pageTitle = `Trading Journal | SilentXx`;
+
+const tradeItems = tradePosts.map((post: BlogPost) => {
+  const tradeData = post.data.trade!;
+  const slug = post.data.link ?? (typeof post.slug === 'string' ? post.slug.split('/').pop() || post.slug : String(post.slug));
+  return { trade: tradeData, title: post.data.title, description: post.data.description, date: post.data.date, slug };
+});
+---
+
+<Layout title={pageTitle} description="Real US stock options trading journal with Interactive Brokers. Trade reviews, P&L analysis, and strategy breakdowns.">
+  <TwoColumnLayout>
+    <Cover slot="cover" title="Trading Journal" />
+    <HomeSider slot="sider" lang={lang} />
+    <QuoteMarquee lang={lang} />
+
+    <div class="shadow-box bg-gradient-start mx-0 flex w-full flex-col px-6 py-4 md:px-3 md:py-2">
+      <div class="mb-8 border-l-4 border-rose-500 bg-rose-50 dark:bg-rose-950/30 px-6 py-4 rounded-r-lg">
+        <h2 class="text-2xl font-bold text-rose-600 dark:text-rose-400 mb-3">📊 Trading Journal</h2>
+        <p class="text-muted-foreground leading-relaxed">
+          Real trading records from Interactive Brokers (IBKR) — US stock options. Each trade includes full strategy logic, option parameters, P&L analysis, and lessons learned.
+        </p>
+      </div>
+
+      {stats.totalTrades > 0 && <TradeStats stats={stats} lang={lang} />}
+
+      <div class="mb-6 mt-6">
+        <h3 class="text-xl font-bold mb-4 flex items-center gap-2">
+          <span class="inline-block w-1 h-6 bg-gradient-to-b from-rose-500 to-pink-500 rounded"></span>
+          Trade Records
+        </h3>
+        {
+          tradeItems.length > 0 ? (
+            <div class="grid gap-6">
+              {tradeItems.map((item) => (
+                <TradeCard trade={item.trade} title={item.title} description={item.description} date={item.date} slug={item.slug} lang={lang} client:load />
+              ))}
+            </div>
+          ) : (
+            <div class="text-center py-16 text-muted-foreground">
+              <div class="text-4xl mb-3">📊</div>
+              <p class="text-lg font-semibold">No trading records yet</p>
+              <p class="text-sm mt-1">Start writing trade reviews with the <code class="rounded bg-muted px-1.5 py-0.5 text-xs">trade</code> frontmatter field.</p>
+            </div>
+          )
+        }
+      </div>
+
+      <div class="mt-8 grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div class="bg-gradient-to-br from-rose-50 to-rose-100 dark:from-rose-950/30 dark:to-rose-900/20 rounded-lg p-4">
+          <div class="text-3xl mb-2">📝</div>
+          <h4 class="font-semibold mb-1 text-rose-900 dark:text-rose-300">Real Records</h4>
+          <p class="text-sm text-muted-foreground">Live IBKR trades, no simulation</p>
+        </div>
+        <div class="bg-gradient-to-br from-pink-50 to-pink-100 dark:from-pink-950/30 dark:to-pink-900/20 rounded-lg p-4">
+          <div class="text-3xl mb-2">🔍</div>
+          <h4 class="font-semibold mb-1 text-pink-900 dark:text-pink-300">Full Logic</h4>
+          <p class="text-sm text-muted-foreground">Strategy · Parameters · Decision process</p>
+        </div>
+        <div class="bg-gradient-to-br from-red-50 to-red-100 dark:from-red-950/30 dark:to-red-900/20 rounded-lg p-4">
+          <div class="text-3xl mb-2">📈</div>
+          <h4 class="font-semibold mb-1 text-red-900 dark:text-red-300">Continuous Review</h4>
+          <p class="text-sm text-muted-foreground">P&L analysis + lessons extracted</p>
+        </div>
+      </div>
+    </div>
+  </TwoColumnLayout>
+</Layout>

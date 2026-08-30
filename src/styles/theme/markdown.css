@@ -1,0 +1,190 @@
+/* 文章正文统一样式 */
+.prose {
+  /* 链接 */
+  a {
+    @apply text-primary hover:text-blue no-underline transition-colors duration-300 hover:underline;
+    font-weight: 500;
+  }
+
+  /* 标题 */
+  h1, h2, h3, h4, h5, h6 {
+    position: relative;
+    scroll-margin-top: 4rem;
+    @apply font-bold;
+    color: hsl(var(--foreground));
+    
+    &:hover .anchor-link::before {
+      opacity: 1;
+    }
+  }
+
+  h1 {
+    @apply text-3xl md:text-2xl;
+    border-bottom: 2px solid hsl(var(--border));
+    padding-bottom: 0.5rem;
+    margin-top: 2rem;
+    margin-bottom: 1.5rem;
+  }
+
+  h2 {
+    @apply text-2xl md:text-xl;
+    margin-top: 2rem;
+    margin-bottom: 1rem;
+    padding-left: 0.75rem;
+    border-left: 4px solid hsl(var(--primary));
+  }
+
+  h3 {
+    @apply text-xl md:text-lg;
+    margin-top: 1.5rem;
+    margin-bottom: 0.75rem;
+  }
+
+  /* 段落 */
+  p {
+    @apply leading-relaxed;
+    margin-top: 1rem;
+    margin-bottom: 1rem;
+    color: hsl(var(--foreground) / 0.9);
+  }
+
+  /* 列表 */
+  ul, ol {
+    margin-top: 1rem;
+    margin-bottom: 1rem;
+    padding-left: 1.5rem;
+  }
+
+  li {
+    margin-top: 0.5rem;
+    margin-bottom: 0.5rem;
+    color: hsl(var(--foreground) / 0.9);
+  }
+
+  /* 加粗和斜体 */
+  strong {
+    @apply font-semibold;
+    color: hsl(var(--primary));
+  }
+
+  em {
+    @apply italic;
+    color: hsl(var(--foreground) / 0.8);
+  }
+
+  /* 代码块 */
+  code {
+    @apply rounded px-1.5 py-0.5 text-sm;
+    background: hsl(var(--muted));
+    color: hsl(var(--primary));
+    font-family: 'Fira Code', monospace;
+  }
+
+  pre {
+    @apply rounded-lg p-4 overflow-x-auto;
+    background: hsl(var(--muted) / 0.5);
+    border: 1px solid hsl(var(--border));
+    margin-top: 1.5rem;
+    margin-bottom: 1.5rem;
+
+    code {
+      background: transparent;
+      padding: 0;
+      color: hsl(var(--foreground));
+    }
+  }
+
+  /* 表格 */
+  table {
+    @apply w-full border-collapse;
+    margin-top: 1.5rem;
+    margin-bottom: 1.5rem;
+    border: 1px solid hsl(var(--border));
+    border-radius: 0.5rem;
+    overflow: hidden;
+  }
+
+  thead {
+    background: hsl(var(--muted) / 0.5);
+  }
+
+  th {
+    @apply font-semibold px-4 py-3 text-left;
+    border-bottom: 2px solid hsl(var(--border));
+    color: hsl(var(--foreground));
+  }
+
+  td {
+    @apply px-4 py-3;
+    border-bottom: 1px solid hsl(var(--border));
+    color: hsl(var(--foreground) / 0.9);
+  }
+
+  tr:last-child td {
+    border-bottom: none;
+  }
+
+  tr:hover {
+    background: hsl(var(--accent) / 0.5);
+  }
+
+  /* 分隔线 */
+  hr {
+    @apply my-8 border-none h-px;
+    background: linear-gradient(
+      to right,
+      transparent,
+      hsl(var(--border)),
+      transparent
+    );
+  }
+
+  /* 图片 */
+  img {
+    @apply rounded-lg shadow-md;
+    margin-top: 1.5rem;
+    margin-bottom: 1.5rem;
+    max-width: 100%;
+    height: auto;
+  }
+
+  /* Anchor link styles for Astro's automatic heading links */
+  .anchor-link {
+    @apply relative;
+    text-decoration: none;
+    opacity: 1;
+    &:hover {
+      text-decoration: none;
+    }
+
+    &:hover::before {
+      opacity: 1;
+    }
+  }
+
+  a.anchor-link > span::before {
+    display: block;
+    content: '';
+    width: 1em;
+    height: 1em;
+    --svg: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cpath d='m12.593 23.258l-.011.002l-.071.035l-.02.004l-.014-.004l-.071-.035q-.016-.005-.024.005l-.004.01l-.017.428l.005.02l.01.013l.104.074l.015.004l.012-.004l.104-.074l.012-.016l.004-.017l-.017-.427q-.004-.016-.017-.018m.265-.113l-.013.002l-.185.093l-.01.01l-.003.011l.018.43l.005.012l.008.007l.201.093q.019.005.029-.008l.004-.014l-.034-.614q-.005-.018-.02-.022m-.715.002a.02.02 0 0 0-.027.006l-.006.014l-.034.614q.001.018.017.024l.015-.002l.201-.093l.01-.008l.004-.011l.017-.43l-.003-.012l-.01-.01z'/%3E%3Cpath fill='%23000' d='M9.686 2.512a1.5 1.5 0 0 1 1.303 1.674L10.637 7h3.976l.399-3.186a1.5 1.5 0 0 1 2.977.372L17.637 7H20a1.5 1.5 0 0 1 0 3h-2.738l-.5 4H19.5a1.5 1.5 0 0 1 0 3h-3.113l-.398 3.186a1.5 1.5 0 0 1-2.977-.372L13.363 17H9.388l-.398 3.186a1.5 1.5 0 1 1-2.977-.372L6.363 17H4.5a1.5 1.5 0 1 1 0-3h2.238l.5-4H5a1.5 1.5 0 1 1 0-3h2.613l.399-3.186A1.5 1.5 0 0 1 9.686 2.51ZM13.74 14l.5-4h-3.977l-.5 4z'/%3E%3C/g%3E%3C/svg%3E");
+    background-color: currentColor;
+    -webkit-mask-image: var(--svg);
+    mask-image: var(--svg);
+    -webkit-mask-repeat: no-repeat;
+    mask-repeat: no-repeat;
+    -webkit-mask-size: 100% 100%;
+    mask-size: 100% 100%;
+    top: 0.2em;
+    right: -1.25em;
+    @apply absolute opacity-0 transition-opacity duration-300;
+  }
+  h1:hover .anchor-link > span::before,
+  h2:hover .anchor-link > span::before,
+  h3:hover .anchor-link > span::before,
+  h4:hover .anchor-link > span::before,
+  h5:hover .anchor-link > span::before,
+  h6:hover .anchor-link > span::before {
+    opacity: 1;
+  }
+}

@@ -1,0 +1,55 @@
+---
+import CategoryPostList from '@components/category/CategoryPostList.astro';
+import HomeSider from '@components/layout/HomeSider.astro';
+import Cover from '@components/ui/cover/Cover.astro';
+import Layout from '@layouts/Layout.astro';
+import TwoColumnLayout from '@layouts/TwoColumnLayout.astro';
+import { getCategoryByLink, getCategoryLinks, getCategoryList } from '@lib/content';
+import { getSeoConfig, getUIText } from '@lib/i18n';
+import QuoteMarquee from '@components/fun/QuoteMarquee.astro';
+
+export async function getStaticPaths() {
+  const { categories } = await getCategoryList('en');
+  const links = getCategoryLinks(categories, '');
+  return links
+    .map((link) => {
+      if (!link) return;
+      const category = getCategoryByLink(categories, link);
+      const slug = typeof link === 'string' && link.endsWith('/') ? link.slice(0, -1) : link;
+      return {
+        params: { slug },
+        props: { category },
+      };
+    })
+    .filter(Boolean);
+}
+
+const { category } = Astro.props;
+const { categories: allCategories, countMap } = await getCategoryList('en');
+const seoConfig = getSeoConfig('en');
+const uiText = getUIText('en');
+
+if (!category) {
+  if (!Astro.params || Astro.params.slug === undefined || Astro.params.slug === '') {
+    return Astro.redirect('/en/categories');
+  }
+  return new Response(null, {
+    status: 404,
+    statusText: 'Not found',
+  });
+}
+
+const displayCategories = category ? [category] : allCategories;
+
+// 获取本地化的分类名称
+const localizedCategoryName = uiText.categoryNames[category?.name as keyof typeof uiText.categoryNames] || category?.name;
+---
+
+<Layout title={`${uiText.categoriesTitle} - ${localizedCategoryName} | ${seoConfig.title}`}>
+  <TwoColumnLayout>
+    <Cover slot="cover" title={`${uiText.categoriesTitle} for "${localizedCategoryName}"`} lang="en" />
+    <HomeSider slot="sider" lang="en" />
+    <QuoteMarquee />
+    <CategoryPostList rootCategory={category} categories={displayCategories} countMap={countMap} lang="en" />
+  </TwoColumnLayout>
+</Layout>

@@ -1,0 +1,65 @@
+---
+import PersonalLayout from '@layouts/PersonalLayout.astro';
+const title = '问心';
+const description = '问心剑的个人笔记 — 投资、AI、写作与生活。先问心，再出剑。';
+---
+
+<PersonalLayout title={title} description={description}>
+
+  <!-- Hero -->
+  <section class="text-center py-16 space-y-6">
+    <h1 class="text-5xl font-serif tracking-wide text-stone-800">问心</h1>
+    <p class="text-lg text-stone-500 max-w-md mx-auto leading-relaxed">
+      投资、AI、写作与生活。<br/>先问心，再出剑。
+    </p>
+    <p class="text-sm text-stone-400">
+      作者：<span class="text-amber-600 font-medium">问心剑</span>
+      <span class="mx-2 text-stone-300">|</span>
+      <a href="https://silentxx.com" class="hover:text-stone-600 transition-colors">SilentXx 主站 →</a>
+    </p>
+  </section>
+
+  <!-- Navigation Cards -->
+  <section class="grid grid-cols-2 gap-4 md:grid-cols-3 mt-8">
+    <a href="/personal/articles" class="group p-6 rounded-xl border border-stone-200 bg-white hover:border-amber-200 hover:shadow-sm transition-all">
+      <span class="text-2xl">📝</span>
+      <h3 class="mt-3 font-medium text-stone-700 group-hover:text-amber-600 transition-colors">文章</h3>
+      <p class="mt-1 text-sm text-stone-400">投资心得 · 生活随笔</p>
+    </a>
+    <a href="/personal/about" class="group p-6 rounded-xl border border-stone-200 bg-white hover:border-amber-200 hover:shadow-sm transition-all">
+      <span class="text-2xl">🖋️</span>
+      <h3 class="mt-3 font-medium text-stone-700 group-hover:text-amber-600 transition-colors">关于</h3>
+      <p class="mt-1 text-sm text-stone-400">我是谁 · 为什么写</p>
+    </a>
+    <a href="https://silentxx.com" class="group p-6 rounded-xl border border-stone-200 bg-white hover:border-amber-200 hover:shadow-sm transition-all">
+      <span class="text-2xl">📊</span>
+      <h3 class="mt-3 font-medium text-stone-700 group-hover:text-amber-600 transition-colors">主站</h3>
+      <p class="mt-1 text-sm text-stone-400">期权 · 现金流系统</p>
+    </a>
+  </section>
+
+  <!-- Latest Articles -->
+  <section class="mt-20">
+    <h2 class="text-lg font-medium text-stone-600 mb-6 flex items-center gap-2">
+      <span class="w-1 h-5 bg-amber-400 rounded-full inline-block"></span>
+      最近文章
+    </h2>
+    <div class="space-y-4">
+      <article class="p-5 rounded-lg border border-stone-200 bg-white">
+        <time class="text-xs text-stone-400">2026-07-26</time>
+        <h3 class="mt-1 text-lg font-medium text-stone-800">
+          <a href="/personal/article/hello-world" class="hover:text-amber-600 transition-colors">
+            你好，这里是问心
+          </a>
+        </h3>
+        <p class="mt-2 text-sm text-stone-500 leading-relaxed">
+          从骆驼祥子到问心剑——一个关于成长、投资与自我认知的故事。
+        </p>
+      </article>
+      <p class="text-center text-sm text-stone-400 py-4">
+        更多文章即将上线。
+      </p>
+    </div>
+  </section>
+
+</PersonalLayout>

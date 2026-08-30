@@ -1,0 +1,123 @@
+---
+import { siteConfig } from '@constants/site-config';
+import { getLanguageFromAstroUrl, getUIText } from '@lib/i18n';
+
+interface Props {
+  since?: number;
+  lang?: 'zh' | 'en';
+}
+
+const { since = new Date().getFullYear(), lang } = Astro.props;
+
+// 获取当前语言
+const currentLang = lang || getLanguageFromAstroUrl(Astro.url);
+const uiText = getUIText(currentLang);
+
+const currentYear = new Date().getFullYear();
+const { name: author } = siteConfig;
+
+// SVG图标文件列表（除了favicon.svg）
+const svgIcons = [
+  '/cube.svg',
+  '/four-leaves.svg',
+  '/geometric-flowers.svg',
+  '/halo.svg',
+  '/oceanengine.svg',
+  '/smart-optimization.svg',
+  '/whirlwind.svg',
+];
+
+// 计算当前应该显示哪个图标（每隔一天切换一次）
+const getIconIndex = () => {
+  const startDate = new Date('2025-09-01'); // 基准日期
+  const today = new Date();
+  const diffTime = Math.abs(today.getTime() - startDate.getTime());
+  const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+  return diffDays % svgIcons.length;
+};
+
+const currentIconIndex = getIconIndex();
+const currentIcon = svgIcons[currentIconIndex];
+---
+
+<footer
+  class="mt-8 border-t border-gray-200 py-6 text-center text-sm text-gray-500 dark:border-gray-700 dark:text-gray-400"
+  role="contentinfo"
+  aria-label={uiText.footerLabel || '网站页脚'}
+>
+  <div class="container mx-auto px-4">
+    <div class="flex flex-col items-center justify-center space-y-3">
+      <!-- 第一行：版权信息 -->
+      <div class="text-gray-500 dark:text-gray-400">
+        <p>
+          © {since}{since !== currentYear ? `-${currentYear}` : ''}
+          <a
+            href="https://www.silentxx.com"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="hover:text-primary dark:hover:text-primary focus:ring-primary/20 rounded text-gray-600 transition-colors focus:ring-2 focus:outline-none dark:text-gray-400"
+            aria-label="访问SilentXx官网（在新窗口打开）">SilentXx｜寂静猎手</a
+          > All rights reserved.
+        </p>
+      </div>
+
+      <!-- 第二行：RSS、Sitemap、统计 -->
+      <div class="flex flex-wrap items-center justify-center gap-4">
+        <a
+          href="/rss.xml"
+          target="_blank"
+          rel="noopener noreferrer"
+          class="hover:text-primary dark:hover:text-primary focus:ring-primary/20 inline-flex items-center gap-1 rounded text-gray-600 transition-colors focus:ring-2 focus:outline-none dark:text-gray-400"
+          aria-label="订阅RSS源（在新窗口打开）"
+        >
+          <span>{uiText.subscribeRSS || '订阅 RSS'}</span>
+        </a>
+        <span class="text-gray-400 dark:text-gray-600">|</span>
+        <a
+          href="/sitemap-index.xml"
+          target="_blank"
+          rel="noopener noreferrer"
+          class="hover:text-primary dark:hover:text-primary focus:ring-primary/20 inline-flex items-center gap-1 rounded text-gray-600 transition-colors focus:ring-2 focus:outline-none dark:text-gray-400"
+          aria-label="查看网站地图（在新窗口打开）"
+        >
+          <span>Sitemap</span>
+        </a>
+        <span class="text-gray-400 dark:text-gray-600">|</span>
+        <a
+          href="https://cloud.umami.is/share/CZenOoFWBuXrxOnG/silentxx.com"
+          target="_blank"
+          rel="noopener noreferrer"
+          class="hover:text-primary dark:hover:text-primary focus:ring-primary/20 inline-flex items-center gap-1 rounded text-gray-600 transition-colors focus:ring-2 focus:outline-none dark:text-gray-400"
+          aria-label="查看网站统计（在新窗口打开）"
+        >
+          <span>{uiText.siteStatistics || '网站统计'}</span>
+        </a>
+      </div>
+
+      <!-- 第三行：技术栈信息 -->
+      <div class="text-xs text-gray-500 dark:text-gray-400">
+        <p class="flex items-center justify-center gap-2">
+          <img src={currentIcon} alt="Rotating Icon" class="h-3 w-3" style="animation: spin 3s linear infinite;" />
+          {/* 在图标和"基于"文字之间增加空格 */}
+          <span> </span>
+          {uiText.basedOn || '基于'}
+          <a
+            href="https://astro.build/"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="hover:text-primary dark:hover:text-primary focus:ring-primary/20 rounded text-gray-600 transition-colors focus:ring-2 focus:outline-none dark:text-gray-400"
+            aria-label="访问Astro官网（在新窗口打开）">Astro</a
+          >
+          <img src="/fast-forward.gif" alt="Fast Forward" class="mx-1 inline-block h-4 w-4" />
+          <a
+            href="https://github.com/AheheXx1982/silentxx-astro-theme"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="hover:text-primary dark:hover:text-primary focus:ring-primary/20 rounded text-gray-600 transition-colors focus:ring-2 focus:outline-none dark:text-gray-400"
+            aria-label="访问SilentX主题GitHub仓库（在新窗口打开）">SilentXx</a
+          >
+        </p>
+      </div>
+    </div>
+  </div>
+</footer>

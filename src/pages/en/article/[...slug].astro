@@ -1,0 +1,101 @@
+---
+import HomeSider from '@components/layout/HomeSider.astro';
+import Cover from '@components/ui/cover/Cover.astro';
+import CustomContent from '@components/common/CustomContent.astro';
+import { HomeSiderType } from '@constants/enum';
+import Layout from '@layouts/Layout.astro';
+import TwoColumnLayout from '@layouts/TwoColumnLayout.astro';
+import { getSortedPosts, getCategoryArr } from '@lib/content';
+import { render } from 'astro:content';
+import SeriesNavigation from '@components/post/SeriesNavigation.astro';
+import { getSiteConfig } from '@lib/i18n';
+import { Icon } from 'astro-icon/components';
+import QuoteMarquee from '@components/fun/QuoteMarquee.astro';
+import OptionsBrandBanner from '@components/options/OptionsBrandBanner.astro';
+
+export async function getStaticPaths() {
+  const posts = await getSortedPosts('en', true);
+
+  return posts.map((post) => {
+    // 使用文件名作为 slug，不包含路径
+    const slug = post.slug.split('/').pop() || post.slug;
+    return {
+      params: { slug },
+      props: { post },
+    };
+  });
+}
+
+const { post } = Astro.props;
+const { Content } = await render(post);
+const { title, description, categories = [] } = post.data;
+const siteConfig = getSiteConfig('en');
+
+// Check if this article belongs to Options Basics (期权入门与基础)
+const categoryArr = getCategoryArr(categories?.[0]);
+const isOptionsArticle = categoryArr?.length > 0 && categoryArr[0] === '期权入门与基础';
+
+// Get all posts for series navigation
+const allPosts = await getSortedPosts('en', true);
+
+// Find previous and next posts in the same category
+let prevPost = null;
+let nextPost = null;
+
+if (categoryArr && categoryArr.length >= 2) {
+  // Get the second level category (e.g., '为什么要学习期权')
+  const seriesCategory = categoryArr[1];
+
+  // Filter posts with the same series category
+  const seriesPosts = allPosts.filter((p) => {
+    const pCategoryArr = getCategoryArr(p.data.categories?.[0]);
+    return pCategoryArr && pCategoryArr.length >= 2 && pCategoryArr[1] === seriesCategory;
+  });
+
+  // Sort by date to maintain chronological order
+  seriesPosts.sort((a, b) => a.data.date.valueOf() - b.data.date.valueOf());
+
+  // Find current post index
+  const currentIndex = seriesPosts.findIndex((p) => {
+    const currentSlug = post.data?.link ?? (typeof post.slug === 'string' ? post.slug.split('/').pop() : post.slug);
+    const pSlug = p.data?.link ?? (typeof p.slug === 'string' ? p.slug.split('/').pop() : p.slug);
+    return currentSlug === pSlug;
+  });
+
+  if (currentIndex !== -1) {
+    prevPost = currentIndex > 0 ? seriesPosts[currentIndex - 1] : null;
+    nextPost = currentIndex < seriesPosts.length - 1 ? seriesPosts[currentIndex + 1] : null;
+  }
+}
+---
+
+<Layout title={`${title} | ${siteConfig.title}`} description={description} siderType={HomeSiderType.POST}>
+  <TwoColumnLayout>
+    <Cover slot="cover" />
+    <HomeSider slot="sider" type={HomeSiderType.POST} lang="en" />
+    <QuoteMarquee />
+    <div class="shadow-box bg-gradient-start flex flex-col gap-2 p-4 pt-6 md:px-5 md:py-4">
+      <nav class="text-muted-foreground flex items-center gap-2 text-sm">
+        <div class="flex items-center gap-1">
+          <Icon name="fa6-solid:house-chimney" class="h-4 w-4" />
+          <a href="/en" aria-label="Back to Home">
+            <span class="hover:text-blue transition-colors duration-300">Home</span>
+          </a>
+        </div>
+      </nav>
+      <!-- Article Title -->
+      <h1 class="word-break mt-2 mb-4 text-center text-2xl font-bold leading-snug text-gray-800 md:text-3xl">
+        {title}
+      </h1>
+      <div class="mx-auto mb-6 h-0.5 w-24 rounded bg-gradient-to-r from-[#ed6ea0] to-[#ec8c69]"></div>
+      <article
+        class="prose md:prose-sm dark:prose-invert tablet:max-w-[calc(100vw-2.5rem)] tablet:w-auto w-[calc(100vw-20rem)] max-w-5xl"
+      >
+        {isOptionsArticle && <OptionsBrandBanner lang="en" />}
+        <CustomContent Content={Content} />
+      </article>
+      <!-- Series Navigation -->
+      <SeriesNavigation prevPost={prevPost} nextPost={nextPost} lang="en" />
+    </div>
+  </TwoColumnLayout>
+</Layout>

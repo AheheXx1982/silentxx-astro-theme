@@ -1,0 +1,11 @@
+{
+  "slug": "silentxx-smart-toc-demo",
+  "generated": "2026-08-30",
+  "sections": [
+    { "title": "这个组件解决什么问题", "anchor": "做博客和内容站的朋友" },
+    { "title": "核心思想：五级降级链", "anchor": "SmartToc 的核心是一个五级降级链" },
+    { "title": "AI 智能目录是怎么来的", "anchor": "对于没有标题结构的存量文章" },
+    { "title": "开源与使用", "anchor": "组件已开源在 GitHub" },
+    { "title": "这是第一个作品，但不会是最后一个", "anchor": "这是 SilentXx 开源的第一款" }
+  ]
+}

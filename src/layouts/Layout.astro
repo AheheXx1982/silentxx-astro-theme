@@ -1,0 +1,134 @@
+---
+import { HomeSiderType } from '@constants/enum';
+import { getLanguageFromAstroUrl, getSeoConfig, getSiteConfig } from '@lib/i18n';
+
+interface Props {
+  title: string;
+  description?: string;
+  siderType?: HomeSiderType;
+  lang?: 'zh' | 'en';
+}
+
+import '@fontsource/poppins';
+import '@fontsource/noto-serif-sc';
+import '@fontsource/noto-serif-jp';
+import '@fontsource/open-sans';
+import '@fontsource/playfair-display';
+import '@fontsource/noto-sans';
+import 'font-smiley-sans/style.css';
+import LoadingIndicator from 'astro-loading-indicator/component';
+import Header from '@components/layout/Header.astro';
+import Footer from '@components/layout/Footer.astro';
+import '@styles/index.css';
+import { Tooltips } from 'astro-tooltips';
+import FloatingGroup from '@components/layout/FloatingGroup.astro';
+import MobileDrawer from '@components/layout/MobileDrawer.astro';
+import GlobalMusicPlayer from '@components/music/GlobalMusicPlayer.astro';
+import ChatWidget from '@components/companion/ChatWidget.tsx';
+import SEOHead from '@components/layout/SEOHead.astro';
+
+// 获取当前语言
+const currentLang = getLanguageFromAstroUrl(Astro.url);
+const seoConfig = getSeoConfig(currentLang);
+const siteConfig = getSiteConfig(currentLang);
+
+// 检测页面类型
+const url = Astro.url.pathname;
+const isPostPage = url.startsWith('/article/');
+
+const { title = seoConfig.title, description = seoConfig.description, siderType, lang = currentLang } = Astro.props;
+// TODO: siderType should be custom in router file, not in layout
+---
+
+<!doctype html>
+<html transition:name="root" lang={lang === 'en' ? 'en' : 'zh-CN'}>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width" />
+    <!-- 为不同浏览器和设备提供多种尺寸的favicon -->
+    <link rel="icon" type="image/x-icon" href="/favicon.ico" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/favicon.ico" />
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon.ico" />
+    <link rel="icon" type="image/png" sizes="16x16" href="/favicon.ico" />
+    <meta name="generator" content={Astro.generator} />
+    <title>{title}</title>
+
+    <!-- SEO: Structured Data + OG + Twitter -->
+    <SEOHead title={title} description={description} type="website" />
+
+    <!-- Google Fonts - preconnect for performance -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Mrs+Saint+Delafield&family=Tirra:wght@400;500;600;700&family=Inter:wght@300;400;500;600;700&family=Roboto:wght@300;400;500;700&family=Nunito:wght@300;400;600;700&family=Fira+Sans:wght@300;400;500;600&family=Source+Sans+Pro:wght@300;400;600;700&family=Crimson+Text:ital,wght@0,400;0,600;1,400&family=Merriweather:wght@300;400;700&family=Lora:wght@400;500;600;700&family=Dancing+Script:wght@400;500;600;700&family=Pacifico&family=Caveat:wght@400;500;600;700&family=Kalam:wght@300;400;700&display=swap"
+      rel="stylesheet"
+    />
+
+    <LoadingIndicator color="red" />
+    <Tooltips />
+
+    <link rel="alternate" type="application/rss+xml" title={siteConfig.title} href={`${Astro.site}rss.xml`} />
+
+    <script is:inline>
+      // 立即执行主题检查 否则会闪烁
+      if (
+        localStorage.theme === 'dark' ||
+        (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)
+      ) {
+        document.documentElement.classList.add('dark');
+        document.documentElement.classList.remove('light');
+      } else {
+        document.documentElement.classList.remove('dark');
+        document.documentElement.classList.add('light');
+      }
+
+      // 立即执行主题颜色检查
+      const savedColor = localStorage.getItem('theme-color') || 'pink';
+      document.documentElement.setAttribute('data-theme-color', savedColor);
+    </script>
+    <script>
+      function checkTheme() {
+        if (
+          localStorage.theme === 'dark' ||
+          (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)
+        ) {
+          document.documentElement.classList.add('dark');
+          document.documentElement.classList.remove('light'); // 本来是没有 light 的，这样是为了触发 MutationObserver
+        } else {
+          document.documentElement.classList.remove('dark');
+          document.documentElement.classList.add('light');
+        }
+
+        // 检查并应用主题颜色
+        const savedColor = localStorage.getItem('theme-color') || 'pink';
+        document.documentElement.setAttribute('data-theme-color', savedColor);
+      }
+      // 在每次页面加载时检查
+      document.addEventListener('astro:page-load', checkTheme);
+
+      // 监听主题颜色变更事件
+      document.addEventListener('theme-color-changed', function (event) {
+        const customEvent = event as CustomEvent;
+        const { color, colorHex, colorName, colorData } = customEvent.detail;
+        if (color) {
+          // 应用主题颜色
+          document.documentElement.setAttribute('data-theme-color', color);
+          localStorage.setItem('theme-color', color);
+          console.log('主题颜色已更新:', color, colorName, colorHex);
+        }
+      });
+    </script>
+  </head>
+  <body class={isPostPage ? 'page page--post' : 'page'}>
+    <div class="flex min-h-screen flex-col text-black dark:text-white">
+      <Header />
+      <main class="relative flex grow flex-col">{(<slot />)}</main>
+      <Footer since={2020} lang={currentLang} />
+      <FloatingGroup />
+      <MobileDrawer type={siderType} lang={currentLang} />
+      <GlobalMusicPlayer />
+      <ChatWidget client:load />
+    </div>
+  </body>
+</html>

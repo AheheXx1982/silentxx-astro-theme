@@ -1,0 +1,76 @@
+---
+import { Icon } from 'astro-icon/components';
+import { LANGUAGES, type Language } from '../../constants/i18n';
+import { getLanguageFromAstroUrl } from '../../lib/i18n';
+
+// 获取当前语言
+const currentLang = getLanguageFromAstroUrl(Astro.url);
+const currentPath = Astro.url.pathname;
+
+// 生成语言切换链接
+function getLanguageSwitchUrl(targetLang: Language): string {
+  if (currentLang === 'zh' && targetLang === 'en') {
+    // 从中文切换到英文
+    return `/en${currentPath}`;
+  } else if (currentLang === 'en' && targetLang === 'zh') {
+    // 从英文切换到中文
+    return currentPath.replace(/^\/en/, '') || '/';
+  } else if (currentLang === 'zh' && targetLang === 'zh') {
+    // 保持中文
+    return currentPath;
+  } else if (currentLang === 'en' && targetLang === 'en') {
+    // 保持英文
+    return currentPath;
+  }
+
+  return currentPath;
+}
+
+const otherLanguages = Object.keys(LANGUAGES).filter((lang) => lang !== currentLang) as Language[];
+---
+
+<div class="language-switcher">
+  <div class="group relative">
+    <!-- 当前语言显示 -->
+    <button
+      class="bg-secondary/50 hover:bg-secondary/70 flex items-center gap-2 rounded-lg px-3 py-2 transition-colors duration-200"
+      aria-label="切换语言"
+    >
+      <Icon name="ri:translate-2" class="h-4 w-4" />
+      <span class="text-sm font-medium">{LANGUAGES[currentLang]}</span>
+      <Icon name="ri:arrow-down-s-line" class="h-4 w-4 transition-transform group-hover:rotate-180" />
+    </button>
+
+    <!-- 语言选择下拉菜单 -->
+    <div
+      class="bg-card border-border invisible absolute top-full right-0 z-10 mt-2 min-w-[140px] rounded-lg border opacity-0 shadow-lg transition-all duration-200 group-hover:visible group-hover:opacity-100"
+    >
+      {
+        otherLanguages.map((lang) => (
+          <a
+            href={getLanguageSwitchUrl(lang)}
+            class="hover:bg-secondary/50 flex items-center gap-2 px-3 py-2 text-sm transition-colors duration-200 first:rounded-t-lg last:rounded-b-lg"
+            aria-label={`切换到${LANGUAGES[lang]}`}
+          >
+            <Icon name="ri:global-line" class="h-4 w-4" />
+            <span>{LANGUAGES[lang]}</span>
+          </a>
+        ))
+      }
+    </div>
+  </div>
+</div>
+
+<style>
+  .language-switcher {
+    @apply relative;
+  }
+
+  .language-switcher .group:hover .group-hover\\:opacity-100 {
+    @apply visible opacity-100;
+  }
+
+  .language-switcher .group:hover .group-hover\\:rotate-180 {
+    @apply rotate-180;
+  }
+</style>

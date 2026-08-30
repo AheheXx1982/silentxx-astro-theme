@@ -1,0 +1,91 @@
+---
+import type { Category } from '@lib/content';
+import CategoryTitle from './CategoryTitle.astro';
+import { getCategoryLink } from '@lib/content';
+import { categoryMap } from '@constants/category';
+import { getUIText } from '@lib/i18n';
+
+interface Props {
+  category: Category;
+  parentName: string;
+  countMap: Record<string, number>;
+  lang?: 'zh' | 'en';
+}
+
+const { category, parentName, countMap, lang = 'zh' } = Astro.props;
+const uiText = getUIText(lang);
+
+// 分类名称翻译函数
+const translateCategoryName = (categoryName: string): string => {
+  if (lang === 'en' && uiText.categoryNames) {
+    const translated = (uiText.categoryNames as Record<string, string>)[categoryName];
+    return translated || categoryName;
+  }
+  return categoryName;
+};
+
+// 翻译分类名称
+const translatedCategoryName = translateCategoryName(category.name);
+const categoryLinkPrefix = lang === 'en' ? '/en/categories' : '/categories';
+
+// 获取分类对应的slug，处理中英文分类名
+const getCategorySlug = (categoryName: string): string => {
+  // 先尝试直接在categoryMap中查找（中文名）
+  if (categoryMap[categoryName]) {
+    return categoryMap[categoryName];
+  }
+  
+  // 如果是英文环境，需要将英文名转回中文key
+  if (lang === 'en' && uiText.categoryNames) {
+    const categoryNames = uiText.categoryNames as Record<string, string>;
+    // 通过英文名查找中文key
+    const zhKey = Object.keys(categoryNames).find(key => categoryNames[key] === categoryName);
+    if (zhKey && categoryMap[zhKey]) {
+      return categoryMap[zhKey];
+    }
+  }
+  
+  return categoryName;
+};
+
+// 修复:确保使用正确的分类映射
+const parentLink = getCategorySlug(parentName);
+const childLink = getCategorySlug(category.name);
+const categoryLink = `${parentLink}/${childLink}`;
+
+const categoryHref = `${categoryLinkPrefix}/${categoryLink}`;
+const grandChildLinks = await Promise.all(
+  (category.children || []).map(async (grandChild) => {
+    const parentLink = getCategorySlug(parentName);
+    const childLink = getCategorySlug(category.name);
+    const grandChildLink = getCategorySlug(grandChild.name);
+    const fullLink = `${parentLink}/${childLink}/${grandChildLink}`;
+    return {
+      grandChild,
+      link: fullLink,
+      translatedName: translateCategoryName(grandChild.name),
+    };
+  }),
+);
+---
+
+<CategoryTitle
+  title={translatedCategoryName}
+  count={countMap[category.name] ?? 0}
+  href={categoryHref}
+  level="h3"
+/>
+{
+  grandChildLinks.length > 0 && (
+    <div class="category-second-level-container flex flex-col">
+      {grandChildLinks.map(({ grandChild, link, translatedName }) => (
+        <p class="shoka-decoration-circle text-primary hover:text-blue relative px-7.5 py-2 text-base/9">
+          <a href={`${categoryLinkPrefix}/${link}`} class="dashed-border border-b">
+            {translatedName}
+          </a>
+          <span class="text-muted-foreground text-sm">({countMap[grandChild.name] ?? 0})</span>
+        </p>
+      ))}
+    </div>
+  )
+}

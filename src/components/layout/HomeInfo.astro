@@ -1,0 +1,449 @@
+---
+import ButtonLink from '@components/control/ButtonLink.astro';
+import { HomeSiderType } from '@constants/enum';
+import { routers } from '@constants/router';
+import { siteConfig } from '@constants/site-config';
+import { getAllTags, getCategoryList, getPostCount, getSortedPosts } from '@lib/content';
+import { categoryMap } from '@constants/category';
+import { cn } from '@lib/utils';
+import { Icon } from 'astro-icon/components';
+import Social from './Social.astro';
+import { getLanguageFromAstroUrl, getUIText, getSiteConfig } from '@lib/i18n';
+
+interface Props {
+  type?: HomeSiderType;
+  className?: string;
+  isDrawer?: boolean;
+  frontmatter?: any; // 添加frontmatter属性用于传递文章数据
+  lang?: 'zh' | 'en'; // 🔑 必须添加
+}
+
+const { lang } = Astro.props;
+const currentLang = (lang || getLanguageFromAstroUrl(Astro.url)) as 'zh' | 'en';
+const uiText = getUIText(currentLang);
+const i18nSiteConfig = getSiteConfig(currentLang);
+
+const postCount = await getPostCount();
+const { categories, countMap } = await getCategoryList(currentLang);
+const posts = await getSortedPosts(currentLang, true); // 根据语言筛选文章,排除介绍文章
+const allPosts = await getSortedPosts(undefined, true); // 全部语言，用于侧边栏统计
+const tags = getAllTags(allPosts);
+
+const allTags = Object.entries(tags).map(([tag, count]) => ({ tag, count }));
+
+// 计算实际存在的分类数量(递归统计所有子分类)
+function countAllCategories(cats: any[]): number {
+  let count = 0;
+  for (const cat of cats) {
+    count++; // 计数当前分类
+    if (cat.children && cat.children.length > 0) {
+      count += countAllCategories(cat.children); // 递归计数子分类
+    }
+  }
+  return count;
+}
+
+const allCategoriesCount = countAllCategories(categories);
+
+// 🔑 优先使用国际化配置
+const navLinks = i18nSiteConfig.navLinks && i18nSiteConfig.navLinks.length > 0 ? i18nSiteConfig.navLinks : routers;
+---
+
+<div class="flex flex-col items-center pt-8">
+  <div class="relative">
+    <div
+      id="avatar-container"
+      class="shadow-card-darker relative h-40 w-40 cursor-pointer overflow-hidden rounded-full border-4 border-white/30 transition"
+      onclick="toggleAvatarAnimation(this)"
+      role="button"
+      tabindex="0"
+      onkeydown="if(event.key==='Enter'||event.key===' ') { toggleAvatarAnimation(this); event.preventDefault(); }"
+      onmouseenter="startHoverEffects(this)"
+      onmouseleave="stopHoverEffects(this)"
+    >
+      <img
+        transition:persist="page-home-sider-avatar"
+        src={siteConfig.avatar}
+        alt={`${siteConfig.name}'s avatar`}
+        class="h-full w-full rounded-full transition-all duration-700"
+      />
+      <div class="rainbow-border pointer-events-none absolute inset-0 rounded-full border-4 border-white/30 opacity-0"></div>
+      <div class="pointer-events-none absolute inset-0 rounded-full bg-white/20 opacity-0"></div>
+    </div>
+  </div>
+
+  <p class="mt-2">{siteConfig?.title}</p>
+  <p class="text-muted-foreground mt-3 break-words whitespace-pre-line">{i18nSiteConfig?.description}</p>
+  <Social />
+  <div
+    class="text-muted-foreground mt-3 flex justify-center text-center text-sm/4 whitespace-nowrap select-none dark:text-white/80"
+  >
+    <a
+      href={currentLang === 'en' ? '/en/categories' : '/categories'}
+      aria-label={uiText.categoriesTitle}
+      class="hover:text-blue"
+    >
+      <p class="flex cursor-pointer flex-col gap-2 p-1 transition">
+        <span class="text-lg/5 font-bold">{allCategoriesCount}</span>
+        {uiText.categoriesTitle}
+      </p>
+    </a>
+    <div class="bg-muted-foreground mx-3 w-px"></div>
+    <a
+      href={currentLang === 'en' ? '/en/tags' : '/tags'}
+      aria-label={uiText.tags}
+      class="hover:text-blue flex cursor-pointer flex-col gap-2 p-1 transition"
+    >
+      <span class="text-lg/5 font-bold">{allTags?.length ?? 0}</span>
+      {uiText.tags}
+    </a>
+    <div class="bg-muted-foreground mx-3 w-px"></div>
+    <a
+      href={currentLang === 'en' ? '/en/archives' : '/archives'}
+      aria-label={uiText.archives}
+      class="hover:text-blue flex cursor-pointer flex-col gap-2 p-1 transition"
+    >
+      <span class="text-lg/5 font-bold">{allPosts.length}</span>
+      {uiText.archives}
+    </a>
+  </div>
+  <div class="mt-6 flex w-full flex-col items-center gap-2.5">
+    {
+      navLinks.map((item) => {
+        // 🔑 类型安全处理
+        const path = (item as any).href || (item as any).path;
+        const { name, icon, children } = item as any;
+
+        // 排除已移到右上角的链接
+        if (name === '幻念集' || name === 'Thoughts') {
+          return null;
+        }
+
+        const isExternal = path?.startsWith('http');
+
+        if (children?.length) {
+          return (
+            <div class="bg-foreground/10 flex w-full flex-col rounded-xl opacity-75 transition-all duration-300 hover:opacity-100">
+              <div class="flex-center h-12">
+                {icon && <Icon name={icon} class="mr-1.5" />}
+                {name}
+              </div>
+              <div class="flex flex-col gap-2.5">
+                {children.map((child: any) => {
+                  // 兼容 href 和 path 属性
+                  const childPath = child.href || child.path;
+                  return (
+                    <ButtonLink
+                      url={childPath}
+                      label={child.name}
+                      variant="gradient-shoka"
+                      className={cn(
+                        'shoka-button-shadow h-12 w-full rounded-xl text-base tracking-wider transition-all duration-300',
+                        {
+                          'text-muted-foreground/80 hover:bg-muted-foreground/10 bg-none shadow-none hover:shadow-none':
+                            childPath !== Astro.url.pathname,
+                        },
+                      )}
+                    >
+                      {child.icon && <Icon name={child.icon} class="mr-1.5" />}
+                      {child.name}
+                    </ButtonLink>
+                  );
+                })}
+              </div>
+            </div>
+          );
+        }
+
+        // 对于外部链接,使用普通 a 标签新窗口打开
+        if (isExternal) {
+          return (
+            <a
+              href={path}
+              target="_blank"
+              rel="noopener noreferrer"
+              class={cn(
+                'shoka-button-shadow h-12 w-full rounded-xl text-base tracking-wider opacity-75 transition-all duration-300 hover:opacity-100',
+                'bg-gradient-shoka-button inline-flex items-center justify-center px-4 py-2 whitespace-nowrap',
+                'text-muted-foreground/80 hover:bg-muted-foreground/10 bg-none shadow-none hover:shadow-none',
+              )}
+            >
+              {icon && <Icon name={icon} class="mr-1.5" />}
+              {name}
+            </a>
+          );
+        }
+
+        return (
+          <ButtonLink
+            url={path}
+            label={name}
+            variant="gradient-shoka"
+            className={cn(
+              'shoka-button-shadow h-12 w-full rounded-xl text-base tracking-wider opacity-75 transition-all duration-300 hover:opacity-100',
+              {
+                'text-muted-foreground/80 hover:bg-muted-foreground/10 bg-none shadow-none hover:shadow-none':
+                  path !== Astro.url.pathname,
+              },
+            )}
+          >
+            {icon && <Icon name={icon} class="mr-1.5" />}
+            {name}
+          </ButtonLink>
+        );
+      })
+    }
+  </div>
+</div>
+
+<script is:inline>
+  // 避免重复声明全局变量
+  if (typeof window.homeInfoBeautifulColors === 'undefined') {
+    // 定义更符合大众审美的颜色数组
+    window.homeInfoBeautifulColors = [
+      '#FF6B6B', // 活力红
+      '#4ECDC4', // 清新蓝绿
+      '#45B7D1', // 天空蓝
+      '#96CEB4', // 薄荷绿
+      '#FFEAA7', // 柠檬黄
+      '#DDA0DD', // 梅花紫
+      '#98D8C8', // 海蓝绿
+      '#F7DC6F', // 金盏花黄
+      '#BB8FCE', // 薰衣草紫
+      '#85C1E9', // 淡蓝色
+      '#F8C471', // 杏色
+      '#82E0AA', // 翡翠绿
+      '#F1948A', // 珊瑚粉
+      '#85C1E9', // 淡蓝色
+    ];
+
+    // 定义丰富的点击特效数组
+    window.homeInfoClickEffects = [
+      'explode', // 爆炸效果
+      'fade-in-out', // 淡入淡出
+      'marquee', // 跑马灯
+      'fly-up', // 飞天
+      'dive-down', // 遁地
+      'flicker', // 闪烁
+      'swing', // 摇摆
+      'pulse-scale', // 脉冲缩放
+      'dragon-fly-out', // 巨龙飞出
+      'star-twinkle', // 星光闪烁
+      'ribbon-dance', // 彩带飞舞
+      'halo-expand', // 光环扩散
+      'particle-orbit', // 粒子环绕
+      'neon-glow', // 霓虹灯效果
+      'warp-effect', // 时空扭曲
+      'kaleidoscope', // 万花筒效果
+      'lightning', // 闪电效果
+      'time-tunnel', // 时空隧道
+    ];
+  }
+
+  // 生成随机颜色
+  function getRandomColor() {
+    return window.homeInfoBeautifulColors[Math.floor(Math.random() * window.homeInfoBeautifulColors.length)];
+  }
+
+  // 获取随机点击效果
+  function getRandomClickEffect() {
+    return window.homeInfoClickEffects[Math.floor(Math.random() * window.homeInfoClickEffects.length)];
+  }
+
+  // 创建特效元素的函数
+  function createEffectElement(container, effectType) {
+    const effectElement = document.createElement('div');
+    effectElement.style.position = 'absolute';
+    effectElement.style.pointerEvents = 'none';
+    effectElement.style.zIndex = '999';
+
+    switch (effectType) {
+      case 'halo-expand':
+        effectElement.style.top = '-20px';
+        effectElement.style.left = '-20px';
+        effectElement.style.width = 'calc(100% + 40px)';
+        effectElement.style.height = 'calc(100% + 40px)';
+        effectElement.style.border = '2px solid ' + getRandomColor();
+        effectElement.style.borderRadius = '50%';
+        effectElement.classList.add('halo-expand');
+        break;
+
+      case 'particle-orbit':
+        // 创建多个粒子
+        for (let i = 0; i < 5; i++) {
+          const particle = document.createElement('div');
+          particle.style.width = '8px';
+          particle.style.height = '8px';
+          particle.style.backgroundColor = getRandomColor();
+          particle.style.borderRadius = '50%';
+          particle.style.position = 'absolute';
+          particle.style.top = '50%';
+          particle.style.left = '50%';
+          particle.classList.add('particle-orbit');
+          particle.style.animationDelay = i * 0.2 + 's';
+          effectElement.appendChild(particle);
+        }
+        break;
+
+      case 'star-twinkle':
+        // 创建多个星星
+        for (let i = 0; i < 8; i++) {
+          const star = document.createElement('div');
+          star.style.width = Math.random() * 6 + 2 + 'px';
+          star.style.height = star.style.width;
+          star.style.backgroundColor = '#ffffff';
+          star.style.borderRadius = '50%';
+          star.style.position = 'absolute';
+          star.style.top = Math.random() * 100 + '%';
+          star.style.left = Math.random() * 100 + '%';
+          star.classList.add('star-twinkle');
+          star.style.animationDelay = Math.random() * 2 + 's';
+          effectElement.appendChild(star);
+        }
+        break;
+
+      case 'lightning':
+        effectElement.style.top = '0';
+        effectElement.style.left = '0';
+        effectElement.style.width = '100%';
+        effectElement.style.height = '100%';
+        effectElement.classList.add('lightning');
+        break;
+    }
+
+    return effectElement;
+  }
+
+  function toggleAvatarAnimation(container) {
+    const img = container.querySelector('img');
+    const border = container.querySelector('.rainbow-border');
+
+    if (img.classList.contains('animate-spin')) {
+      // 停止旋转
+      img.classList.remove('animate-spin');
+      border.classList.remove('opacity-100');
+      border.classList.add('opacity-0');
+
+      // 清除可能存在的定时器
+      if (container.spinTimeout) {
+        clearTimeout(container.spinTimeout);
+        delete container.spinTimeout;
+      }
+    } else {
+      // 开始旋转，但只旋转5秒
+      img.classList.add('animate-spin');
+      border.classList.remove('opacity-0');
+      border.classList.add('opacity-100');
+
+      // 5秒后停止旋转并应用点击特效
+      container.spinTimeout = setTimeout(() => {
+        img.classList.remove('animate-spin');
+
+        // 应用点击特效
+        const clickEffect = getRandomClickEffect();
+        container.classList.add(clickEffect);
+
+        // 创建特殊特效元素
+        let effectElement = null;
+        if (['halo-expand', 'particle-orbit', 'star-twinkle', 'lightning'].includes(clickEffect)) {
+          effectElement = createEffectElement(container, clickEffect);
+          container.appendChild(effectElement);
+        }
+
+        // 如果是巨龙飞出特效，创建龙元素
+        if (clickEffect === 'dragon-fly-out') {
+          // 创建龙的SVG元素
+          const dragonSvg = document.createElement('div');
+          dragonSvg.innerHTML = `
+            <svg xmlns="http://www.w3.org/2000/svg" width="60" height="60" viewBox="0 0 100 100" style="position: absolute; top: 0; left: 0; z-index: 1000;">
+              <path d="M20,50 Q30,30 40,40 Q50,50 60,40 Q70,30 80,40 Q90,50 80,60 Q70,70 60,60 Q50,50 40,60 Q30,70 20,60 Z" fill="#FF6B6B"/>
+              <path d="M85,45 L95,40 L95,50 Z" fill="#FF6B6B"/>
+              <circle cx="35" cy="45" r="3" fill="#fff"/>
+              <circle cx="35" cy="45" r="1.5" fill="#000"/>
+            </svg>
+          `;
+          dragonSvg.style.position = 'absolute';
+          dragonSvg.style.top = container.offsetTop + 'px';
+          dragonSvg.style.left = container.offsetLeft + 'px';
+          dragonSvg.style.zIndex = '1000';
+          dragonSvg.style.pointerEvents = 'none';
+
+          // 添加到body中
+          document.body.appendChild(dragonSvg);
+
+          // 为龙添加飞出动画
+          dragonSvg.style.animation = 'dragon-fly-out 2s cubic-bezier(0.34, 1.56, 0.64, 1) forwards';
+
+          // 2秒后移除龙元素
+          setTimeout(() => {
+            if (dragonSvg.parentNode) {
+              dragonSvg.parentNode.removeChild(dragonSvg);
+            }
+          }, 2000);
+        }
+
+        // 根据特效类型设置不同的持续时间
+        let duration = 2000;
+        switch (clickEffect) {
+          case 'warp-effect':
+            duration = 3000;
+            break;
+          case 'kaleidoscope':
+            duration = 4000;
+            break;
+          case 'time-tunnel':
+            duration = 3000;
+            break;
+          case 'halo-expand':
+            duration = 1500;
+            break;
+          case 'particle-orbit':
+            duration = 3000;
+            break;
+        }
+
+        // 持续时间后移除特效
+        setTimeout(() => {
+          container.classList.remove(clickEffect);
+          if (effectElement && effectElement.parentNode) {
+            effectElement.parentNode.removeChild(effectElement);
+          }
+        }, duration);
+      }, 5000);
+    }
+  }
+
+  function startHoverEffects(container) {
+    // 添加多重动态效果
+    container.classList.add('super-bounce'); // 超级跳动效果
+    container.classList.add('pulse-scale'); // 脉冲缩放效果
+
+    const overlay = container.querySelector('div:nth-child(3)');
+    overlay.classList.remove('opacity-0');
+    overlay.classList.add('opacity-100');
+
+    // 只在悬停时选择一种随机颜色，不随时间变化
+    const randomColor = getRandomColor();
+
+    // 应用随机颜色效果
+    container.style.boxShadow = `0 0 15px ${randomColor}, 0 0 30px ${randomColor}, 0 0 45px ${randomColor}`;
+
+    // 应用滤镜增强效果
+    const hueRotation = Math.floor(Math.random() * 60) - 30; // -30到30度的hue旋转
+    container.style.filter = `hue-rotate(${hueRotation}deg) saturate(1.2)`;
+  }
+
+  function stopHoverEffects(container) {
+    // 移除所有动态效果
+    container.classList.remove('super-bounce');
+    container.classList.remove('pulse-scale');
+
+    const overlay = container.querySelector('div:nth-child(3)');
+    overlay.classList.remove('opacity-100');
+    overlay.classList.add('opacity-0');
+
+    // 移除发光效果和滤镜
+    container.style.boxShadow = '';
+    container.style.filter = '';
+  }
+</script>

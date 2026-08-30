@@ -1,0 +1,450 @@
+---
+import WaterfallFlow from './WaterfallFlow.astro';
+
+// 定义多语言内容
+const content = {
+  zh: {
+    title: '幻念集',
+    
+    description: '记录那些转瞬即逝的心灵火花与未曾言说的灵感碎片。'
+  },
+  en: {
+    title: 'Illusionary Thoughts',
+    description: 'Recording those fleeting sparks of the soul and unspoken fragments of inspiration.'
+  }
+};
+
+// 获取传递的语言参数，默认为中文
+const { lang = 'zh' } = Astro.props;
+// 修复TypeScript类型错误
+const currentContent = content[lang as keyof typeof content] || content.zh;
+
+// 纯中文内容数据
+const contentDataZh = [
+  {
+    id: 1,
+    title: '投资的哲学',
+    content:
+      '在金融市场中摸爬滚打十余年，我逐渐明白，投资不仅仅是数字的游戏，更是一种人生的哲学。每一次交易都是一次与自己的对话，每一次决策都是一次价值观的体现。真正的投资大师，不是那些追求短期暴利的人，而是那些能够在市场波动中保持内心平静的人。',
+    date: '2025-09-15',
+    category: '投资感悟',
+  },
+  {
+    id: 2,
+    title: '风险与机遇',
+    content:
+      "风险与机遇如同硬币的两面，永远相伴而生。在投资中，我们不能回避风险，但可以学会管理风险。正如索罗斯所说：'风险来自于你不知道自己在做什么。'只有深入了解自己投资的标的，才能在风险来临时从容应对。",
+    date: '2025-09-10',
+    category: '风险管理',
+  },
+  {
+    id: 3,
+    title: '市场的本质',
+    content:
+      '市场就像一个情绪化的巨人，时而狂喜，时而绝望。作为投资者，我们需要做的不是预测巨人的情绪变化，而是学会在巨人的情绪波动中保持理性。巴菲特的智慧在于，他从不试图与巨人对抗，而是等待巨人犯错时的机会。',
+    date: '2025-09-05',
+    category: '市场观察',
+  },
+  {
+    id: 4,
+    title: '复利的魔力',
+    content:
+      '爱因斯坦曾说复利是世界第八大奇迹。在投资中，复利的力量确实令人惊叹。但复利的实现需要三个要素：时间、耐心和纪律。很多人只看到了复利的结果，却忽略了实现复利的过程需要的坚持和自律。',
+    date: '2025-08-28',
+    category: '投资策略',
+  },
+  {
+    id: 5,
+    title: '从爆仓到盈利',
+    content:
+      '曾经的我也是爆仓小王子，一次次地在市场中失去一切。但正是这些痛苦的经历，让我明白了投资的真谛。亏损并不可怕，可怕的是不知道为什么亏损。每一次失败都是一次学习的机会，每一次挫折都是成长的阶梯。',
+    date: '2025-08-20',
+    category: '经验分享',
+  },
+  {
+    id: 6,
+    title: '价值投资的真谛',
+    content:
+      '价值投资不是简单地买入便宜的股票，而是要理解企业的内在价值。格雷姆和巴菲特告诉我们，价格是你付出的，价值是你得到的。真正的价值投资者会花大量时间研究企业，而不是预测市场走势。',
+    date: '2025-08-15',
+    category: '价值投资',
+  },
+  {
+    id: 7,
+    title: '情绪的控制',
+    content:
+      '在投资中，最大的敌人不是市场，而是我们自己的情绪。贪婪让我们在高点买入，恐惧让我们在低点卖出。学会控制情绪，是每个投资者的必修课。冥想和反思是我控制情绪的方法，每天花十分钟静思，让我在交易中更加冷静。',
+    date: '2025-08-10',
+    category: '心理建设',
+  },
+  {
+    id: 8,
+    title: '多元化的重要性',
+    content:
+      '不要把所有的鸡蛋放在一个篮子里，这是投资的基本原则。但多元化不是简单的分散投资，而是要在不同的资产类别、不同的时间周期、不同的市场环境中进行合理的配置。真正的多元化能够降低风险，同时保持收益。',
+    date: '2025-08-05',
+    category: '资产配置',
+  },
+  {
+    id: 9,
+    title: '长期思维',
+    content:
+      '投资是一场马拉松，而不是短跑。短期的市场波动无法预测，但长期的趋势却相对清晰。拥有长期思维的投资者，不会被短期的涨跌所困扰，而是专注于企业的长期发展。时间是优秀企业的朋友，平庸企业的敌人。',
+    date: '2025-07-28',
+    category: '投资理念',
+  },
+  {
+    id: 10,
+    title: '学习与成长',
+    content:
+      '市场总是在变化，作为投资者，我们必须不断学习和适应。阅读财报、研究行业、分析宏观经济，这些都是投资者的日常功课。但学习不仅限于投资知识，哲学、历史、心理学等领域的知识同样重要，它们能帮助我们更好地理解市场和人性。',
+    date: '2025-07-20',
+    category: '学习成长',
+  },
+  {
+    id: 11,
+    title: '现金流的魅力',
+    content:
+      '在投资中，我越来越偏爱能够产生稳定现金流的资产。无论是高股息的股票，还是能够带来租金收入的房地产，稳定的现金流能够为投资组合提供坚实的基础。现金流就像河流，虽然每一滴水都不起眼，但汇聚在一起却能产生巨大的力量。',
+    date: '2025-07-15',
+    category: '现金流投资',
+  },
+  {
+    id: 12,
+    title: '期权的魅力',
+    content:
+      '期权交易是我在投资路的一大发现。它不仅能够提供杠杆效应，更重要的是能够通过不同的策略来表达对市场的看法。备兑看涨、保护性认沽、跨式组合，每一种策略都有其独特的魅力和适用场景。期权让我在市场中有了更多的武器。',
+    date: '2025-07-10',
+    category: '期权交易',
+  },
+  {
+    id: 13,
+    title: '生活的平衡',
+    content:
+      '投资只是生活的一部分，不是全部。在追求财富增长的同时，我们也不能忽视生活的其他方面。家庭、健康、友情、兴趣爱好，这些都同样重要。一个成功的投资者，应该是一个生活平衡的人。',
+    date: '2025-07-05',
+    category: '生活感悟',
+  },
+  {
+    id: 14,
+    title: '信息与噪音',
+    content:
+      '在信息爆炸的时代，我们每天都被大量的信息包围。但不是所有的信息都是有价值的，有些只是噪音。学会区分信息和噪音，是现代投资者必须具备的能力。我每天会花一个小时筛选信息，只关注那些真正有价值的资讯。',
+    date: '2025-06-28',
+    category: '信息处理',
+  },
+  {
+    id: 15,
+    title: '独立思考',
+    content:
+      '在投资中，独立思考比盲从更重要。市场上的大多数人都在做同样的事情，如果你也随波逐流，那么你只能获得平庸的回报。只有独立思考，才能发现别人看不到的机会。但独立思考并不意味着固执己见，而是要在充分研究的基础上做出判断。',
+    date: '2025-06-20',
+    category: '思维方法',
+  },
+  {
+    id: 16,
+    title: '市场的周期性',
+    content:
+      '市场有其自身的周期性规律，就像四季更替一样自然。理解并顺应市场周期，比试图预测市场转折点更为重要。在牛市中保持谨慎，在熊市中保持乐观，这需要极大的智慧和定力。周期的顶点和底部往往出现在大多数人情绪最极端的时候。',
+    date: '2025-06-15',
+    category: '市场周期',
+  },
+  {
+    id: 17,
+    title: '投资与投机',
+    content:
+      '投资与投机之间并没有绝对的界限，关键在于时间框架和风险控制。投资是基于基本面分析的长期持有，而投机则是基于技术分析的短期交易。两者都有其存在的价值，但需要明确自己的定位，并采用相应的策略和风险管理方法。',
+    date: '2025-06-10',
+    category: '投资理念',
+  },
+  {
+    id: 18,
+    title: '黑天鹅事件',
+    content:
+      '2008年的金融危机、2020年的疫情冲击，这些黑天鹅事件提醒我们，市场总是充满不确定性。作为投资者，我们需要为极端情况做好准备，保持足够的现金储备和心理准备。在风暴来临时，那些有准备的人才能抓住机会。',
+    date: '2025-06-05',
+    category: '风险管理',
+  },
+  {
+    id: 19,
+    title: '技术分析的价值',
+    content:
+      '虽然我更偏向基本面分析，但技术分析同样有其价值。价格已经包含了所有信息，这是技术分析的核心理念。图表形态、成交量、移动平均线等工具，能够帮助我们更好地理解市场情绪和资金流向。关键是要将技术分析与基本面分析结合起来。',
+    date: '2025-05-28',
+    category: '技术分析',
+  },
+  {
+    id: 20,
+    title: '投资日志的重要性',
+    content:
+      '记录每一笔交易的理由、过程和结果，是我这些年养成的重要习惯。投资日志不仅帮助我回顾和总结，更重要的是能够让我清晰地看到自己的思维过程和决策逻辑。通过定期回顾，我能够发现自己的盲点和改进空间。',
+    date: '2025-05-20',
+    category: '投资习惯',
+  },
+  {
+    id: 21,
+    title: '市场先生的脾气',
+    content:
+      "格雷厄姆提出的'市场先生'概念至今仍具有深刻的指导意义。市场先生每天都会报出一个价格，有时乐观，有时悲观。聪明的投资者不会被市场先生的情绪所影响，而是利用他的情绪波动来为自己服务。在市场先生恐惧时贪婪，在他贪婪时恐惧。",
+    date: '2025-05-15',
+    category: '投资哲学',
+  },
+  {
+    id: 22,
+    title: '资产配置的艺术',
+    content:
+      '资产配置是投资中最重要的决策之一，甚至比选择具体的投资标的更重要。合理的资产配置能够在不同市场环境下提供相对稳定的回报。股票、债券、商品、现金等不同资产类别在不同经济周期中的表现各异，理解这种差异是做好资产配置的关键。',
+    date: '2025-05-10',
+    category: '资产配置',
+  },
+  {
+    id: 23,
+    title: '投资中的数学',
+    content:
+      '投资本质上是一门数学游戏。概率、统计、复利计算等数学工具在投资决策中发挥着重要作用。理解赔率、胜率、期望值等概念，能够帮助我们做出更理性的决策。但数学只是工具，不能替代对人性和市场的深刻理解。',
+    date: '2025-05-05',
+    category: '投资理论',
+  },
+  {
+    id: 24,
+    title: '耐心等待的艺术',
+    content:
+      '在投资中，耐心是一种稀有品质。好的投资机会并不常有，更多时候我们需要做的就是等待。就像钓鱼一样，我们需要有足够的耐心等待鱼儿上钩。那些频繁交易的人往往错失了大的机会。学会等待是投资成功的重要因素。',
+    date: '2025-04-28',
+    category: '投资心态',
+  },
+  {
+    id: 25,
+    title: '投资组合的再平衡',
+    content:
+      "随着时间的推移，投资组合中各类资产的比例会发生变化，偏离最初的配置目标。定期进行再平衡，卖出涨幅过大的资产，买入跌幅较大的资产，不仅能够控制风险，还能够实现'高卖低买'的效果。这是投资中少有的双赢策略。",
+    date: '2025-04-20',
+    category: '资产配置',
+  }
+];
+
+// 纯英文内容数据
+const contentDataEn = [
+  {
+    id: 1,
+    title: 'The Philosophy of Investing',
+    content:
+      'After more than ten years of struggling in the financial markets, I gradually realized that investing is not just a game of numbers, but also a philosophy of life. Every trade is a dialogue with oneself, and every decision reflects one\'s values. True investment masters are not those who pursue short-term profits, but those who can maintain inner peace amid market fluctuations.',
+    date: '2025-09-15',
+    category: 'Investment Insights',
+  },
+  {
+    id: 2,
+    title: 'Risk and Opportunity',
+    content:
+      "Risk and opportunity are like two sides of a coin, always coexisting. In investing, we cannot avoid risk, but we can learn to manage it. As Soros said: 'Risk comes from not knowing what you\'re doing.' Only by deeply understanding what you invest in can you respond calmly when risks arise.",
+    date: '2025-09-10',
+    category: 'Risk Management',
+  },
+  {
+    id: 3,
+    title: 'The Nature of the Market',
+    content:
+      'The market is like an emotional giant, sometimes euphoric, sometimes desperate. As investors, we shouldn\'t try to predict the giant\'s emotional changes, but learn to stay rational amid its emotional fluctuations. Buffett\'s wisdom lies in never trying to fight the giant, but waiting for opportunities when the giant makes mistakes.',
+    date: '2025-09-05',
+    category: 'Market Observation',
+  },
+  {
+    id: 4,
+    title: 'The Magic of Compound Interest',
+    content:
+      'Einstein once said that compound interest is the eighth wonder of the world. In investing, the power of compound interest is indeed amazing. But achieving compound interest requires three elements: time, patience, and discipline. Many people only see the results of compound interest, but overlook the persistence and self-discipline needed to achieve it.',
+    date: '2025-08-28',
+    category: 'Investment Strategy',
+  },
+  {
+    id: 5,
+    title: 'From Blowup to Profit',
+    content:
+      'I used to be the prince of blowups, losing everything time and again in the market. But it was these painful experiences that taught me the true essence of investing. Losses aren\'t scary; what\'s scary is not knowing why you lost. Every failure is a learning opportunity, and every setback is a step toward growth.',
+    date: '2025-08-20',
+    category: 'Experience Sharing',
+  },
+  {
+    id: 6,
+    title: 'The Essence of Value Investing',
+    content:
+      'Value investing is not simply buying cheap stocks, but understanding a company\'s intrinsic value. Graham and Buffett taught us that price is what you pay, value is what you get. True value investors spend a lot of time researching companies, not predicting market trends.',
+    date: '2025-08-15',
+    category: 'Value Investing',
+  },
+  {
+    id: 7,
+    title: 'Emotional Control',
+    content:
+      'In investing, the biggest enemy is not the market, but our own emotions. Greed makes us buy at highs, fear makes us sell at lows. Learning to control emotions is a required course for every investor. Meditation and reflection are my methods for emotional control. Spending ten minutes in quiet thought each day helps me stay calm in trading.',
+    date: '2025-08-10',
+    category: 'Psychological Development',
+  },
+  {
+    id: 8,
+    title: 'The Importance of Diversification',
+    content:
+      'Don\'t put all your eggs in one basket - this is a fundamental principle of investing. But diversification is not simply spreading investments; it\'s about making reasonable allocations across different asset classes, time periods, and market environments. True diversification can reduce risk while maintaining returns.',
+    date: '2025-08-05',
+    category: 'Asset Allocation',
+  },
+  {
+    id: 9,
+    title: 'Long-term Thinking',
+    content:
+      'Investing is a marathon, not a sprint. Short-term market fluctuations are unpredictable, but long-term trends are relatively clear. Investors with long-term thinking are not disturbed by short-term ups and downs, but focus on companies\' long-term development. Time is the friend of excellent companies and the enemy of mediocre ones.',
+    date: '2025-07-28',
+    category: 'Investment Philosophy',
+  },
+  {
+    id: 10,
+    title: 'Learning and Growth',
+    content:
+      'Markets are always changing, and as investors, we must continuously learn and adapt. Reading financial reports, researching industries, and analyzing macroeconomic conditions are daily homework for investors. But learning isn\'t limited to investment knowledge - philosophy, history, psychology and other fields are equally important as they help us better understand markets and human nature.',
+    date: '2025-07-20',
+    category: 'Learning and Growth',
+  },
+  {
+    id: 11,
+    title: 'The Charm of Cash Flow',
+    content:
+      'In investing, I increasingly favor assets that generate stable cash flow. Whether high-dividend stocks or real estate that brings rental income, stable cash flow can provide a solid foundation for an investment portfolio. Cash flow is like a river - although each drop of water is insignificant, when gathered together they create tremendous power.',
+    date: '2025-07-15',
+    category: 'Cash Flow Investing',
+  },
+  {
+    id: 12,
+    title: 'The Allure of Options',
+    content:
+      'Options trading was a major discovery on my investment journey. It not only provides leverage effects, but more importantly, allows me to express my market views through different strategies. Covered calls, protective puts, straddles - each strategy has its unique charm and applicable scenarios. Options give me more weapons in the market.',
+    date: '2025-07-10',
+    category: 'Options Trading',
+  },
+  {
+    id: 13,
+    title: 'Life Balance',
+    content:
+      'Investing is just part of life, not all of it. While pursuing wealth growth, we shouldn\'t neglect other aspects of life. Family, health, friendship, hobbies - these are all equally important. A successful investor should be someone with life balance.',
+    date: '2025-07-05',
+    category: 'Life Reflection',
+  },
+  {
+    id: 14,
+    title: 'Information vs. Noise',
+    content:
+      'In the age of information explosion, we are surrounded by massive amounts of information every day. But not all information is valuable - some is just noise. Learning to distinguish between information and noise is a necessary skill for modern investors. I spend an hour each day filtering information, focusing only on truly valuable insights.',
+    date: '2025-06-28',
+    category: 'Information Processing',
+  },
+  {
+    id: 15,
+    title: 'Independent Thinking',
+    content:
+      'In investing, independent thinking is more important than blind following. Most people in the market are doing the same things, and if you follow the crowd, you can only get mediocre returns. Only through independent thinking can you discover opportunities others can\'t see. But independent thinking doesn\'t mean being stubborn - it means making judgments based on thorough research.',
+    date: '2025-06-20',
+    category: 'Thinking Methods',
+  },
+  {
+    id: 16,
+    title: 'Market Cycles',
+    content:
+      'Markets have their own cyclical patterns, as natural as the changing of seasons. Understanding and aligning with market cycles is more important than trying to predict turning points. Stay cautious in bull markets and optimistic in bear markets - this requires great wisdom and determination. Cycle peaks and troughs often occur when most people\'s emotions are at their extremes.',
+    date: '2025-06-15',
+    category: 'Market Cycles',
+  },
+  {
+    id: 17,
+    title: 'Investing vs. Speculating',
+    content:
+      'There is no absolute boundary between investing and speculating; the key lies in time frame and risk control. Investing is based on fundamental analysis for long-term holding, while speculating is based on technical analysis for short-term trading. Both have their value, but one needs to clarify their positioning and adopt corresponding strategies and risk management methods.',
+    date: '2025-06-10',
+    category: 'Investment Philosophy',
+  },
+  {
+    id: 18,
+    title: 'Black Swan Events',
+    content:
+      'The 2008 financial crisis and the 2020 pandemic shock remind us that markets are always full of uncertainty. As investors, we need to prepare for extreme situations, maintain sufficient cash reserves and psychological preparation. In times of crisis, those who are prepared can seize opportunities.',
+    date: '2025-06-05',
+    category: 'Risk Management',
+  },
+  {
+    id: 19,
+    title: 'The Value of Technical Analysis',
+    content:
+      'Although I lean more toward fundamental analysis, technical analysis also has its value. Price already contains all information - this is the core concept of technical analysis. Chart patterns, trading volume, moving averages and other tools can help us better understand market sentiment and capital flows. The key is to combine technical analysis with fundamental analysis.',
+    date: '2025-05-28',
+    category: 'Technical Analysis',
+  },
+  {
+    id: 20,
+    title: 'The Importance of Investment Journals',
+    content:
+      'Recording the reasons, process, and results of each transaction has become an important habit over the years. Investment journals not only help me review and summarize, but more importantly, allow me to clearly see my thought process and decision logic. Through regular reviews, I can identify my blind spots and areas for improvement.',
+    date: '2025-05-20',
+    category: 'Investment Habits',
+  },
+  {
+    id: 21,
+    title: 'Mr. Market\'s Temperament',
+    content:
+      "Graham's concept of 'Mr. Market' still has profound guiding significance today. Mr. Market quotes a price every day, sometimes optimistic, sometimes pessimistic. Smart investors are not influenced by Mr. Market's emotions, but use his emotional fluctuations to their advantage. Be greedy when Mr. Market is fearful, and be fearful when he is greedy.",
+    date: '2025-05-15',
+    category: 'Investment Philosophy',
+  },
+  {
+    id: 22,
+    title: 'The Art of Asset Allocation',
+    content:
+      'Asset allocation is one of the most important decisions in investing, even more important than selecting specific investment targets. Reasonable asset allocation can provide relatively stable returns in different market environments. Different asset classes such as stocks, bonds, commodities, and cash perform differently in various economic cycles. Understanding these differences is key to successful asset allocation.',
+    date: '2025-05-10',
+    category: 'Asset Allocation',
+  },
+  {
+    id: 23,
+    title: 'Mathematics in Investing',
+    content:
+      'Investing is essentially a mathematical game. Mathematical tools such as probability, statistics, and compound interest calculations play an important role in investment decisions. Understanding concepts like odds, win rates, and expected values can help us make more rational decisions. But math is just a tool; it cannot replace deep understanding of human nature and the market.',
+    date: '2025-05-05',
+    category: 'Investment Theory',
+  },
+  {
+    id: 24,
+    title: 'The Art of Patient Waiting',
+    content:
+      'In investment, patience is a rare quality. Good investment opportunities don\'t come often, and more often than not, what we need to do is wait. Like fishing, we need to have enough patience to wait for the fish to bite. Those who trade frequently often miss the big opportunities. Learning to wait is an important factor in investment success.',
+    date: '2025-04-28',
+    category: 'Investment Attitude',
+  },
+  {
+    id: 25,
+    title: 'Investment Portfolio Rebalancing',
+    content:
+      "As time goes by, the proportion of various assets in the investment portfolio will change, deviating from the initial configuration target. Regular rebalancing, selling assets with excessive gains, and buying assets with excessive losses not only controls risk but also achieves the effect of 'selling high and buying low'. This is a rare win-win strategy in investment.",
+    date: '2025-04-20',
+    category: 'Asset Configuration',
+  }
+];
+
+// 准备当前语言的瀑布流数据
+const currentItems = (lang === 'en' ? contentDataEn : contentDataZh)
+  // 随机排序并取前20个
+  .sort(() => 0.5 - Math.random())
+  .slice(0, 20);
+---
+
+<div class="illusionary-thoughts-content">
+  <div class="text-center py-8">
+    <div class="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 p-8 mb-6 shadow-lg w-full mx-auto">
+      <h1 class="flex items-center justify-center text-3xl font-bold mb-4">
+        <img src="/whirlwind.svg" alt="幻念集图标" class="h-8 w-8 mr-2 reverse-slow-spin" />
+        {currentContent.title}
+      </h1>
+      <p class="text-lg text-gray-600 dark:text-gray-400">
+        {currentContent.description}
+      </p>
+    </div>
+  </div>
+  <WaterfallFlow items={currentItems} />
+</div>

@@ -1,0 +1,656 @@
+---
+---
+
+<div id="global-music-player" data-astro-transition-persist="music-player"></div>
+
+<script is:inline>
+  class GlobalMusicPlayer {
+    constructor() {
+      console.log('🎵 GlobalMusicPlayer 眼睛版本构造函数被调用');
+      this.isPlaying = false;
+      this.isMinimized = false;
+      this.currentTrack = null;
+      this.playlist = [];
+      this.currentTrackIndex = 0;
+      this.audioElement = null;
+      this.playerPosition = null;
+      this.eyeAnimationTimers = [];
+      console.log('🎵 GlobalMusicPlayer 属性初始化完成，开始调用 init()');
+      this.init();
+    }
+    
+    // 处理音频文件路径，确保在所有页面路径下都能正确解析
+    resolveAudioPath(src) {
+      if (!src) return '';
+      
+      // 如果已经是完整的URL，直接返回
+      if (src.startsWith('http://') || src.startsWith('https://')) {
+        return src;
+      }
+      
+      // 确保路径以 / 开头
+      if (!src.startsWith('/')) {
+        src = '/' + src;
+      }
+      
+      // 使用encodeURIComponent正确编码路径中的特殊字符
+      // 但要确保路径分隔符不被编码
+      const parts = src.split('/');
+      const encodedParts = parts.map((part, index) => {
+        // 第一个元素是空字符串（因为路径以/开头），不需要编码
+        if (index === 0) return part;
+        // 对文件名部分进行编码，处理特殊字符（包括+号）
+        return encodeURIComponent(part);
+      });
+      const encodedSrc = encodedParts.join('/');
+      
+      // 获取当前页面的基础路径
+      const basePath = window.location.origin;
+      
+      // 返回完整的绝对路径
+      return basePath + encodedSrc;
+    }
+
+    init() {
+      console.log('🎵 GlobalMusicPlayer init() 方法被调用');
+      this.createPlayer();
+      this.bindEvents();
+      this.loadPlaylist();
+      console.log('🎵 GlobalMusicPlayer 初始化完成');
+    }
+
+    createPlayer() {
+      console.log('🎵 创建播放器界面');
+      const container = document.getElementById('global-music-player');
+      if (!container) {
+        console.error('❌ 找不到播放器容器');
+        return;
+      }
+
+      container.innerHTML = `
+        <div id="music-player-maximized" class="fixed top-4 right-4 w-80 bg-gradient-to-br from-amber-50 to-orange-100 rounded-2xl shadow-2xl border border-amber-200/50 backdrop-blur-sm z-50 transition-all duration-300 transform" style="background: linear-gradient(135deg, rgba(254, 243, 199, 0.95), rgba(255, 237, 213, 0.95)); backdrop-filter: blur(10px);">
+          <div class="relative p-6">
+            <!-- 眼睛按钮区域 -->
+            <div class="absolute top-2 left-2 flex gap-2">
+              <!-- 最小化眼睛按钮 -->
+              <button id="minimize-btn" class="eye-button-container" title="最小化" onclick="window.musicPlayer?.minimizePlayer();">
+                <div class="realistic-eye" id="minimize-eye">
+                  <div class="eye-pupil">
+                    <div class="eye-highlight"></div>
+                  </div>
+                </div>
+              </button>
+              
+              <!-- 关闭眼睛按钮 -->
+              <button id="close-btn" class="eye-button-container" title="关闭" onclick="window.musicPlayer?.hidePlayer();">
+                <div class="realistic-eye closed" id="close-eye">
+                  <div class="eye-pupil">
+                    <div class="eye-highlight"></div>
+                  </div>
+                  <div class="eye-slash"></div>
+                </div>
+              </button>
+            </div>
+
+            <!-- 播放器内容 -->
+            <div class="mt-8">
+              <div class="text-center mb-4">
+                <h3 id="track-title" class="text-lg font-semibold text-amber-900 mb-1">选择音乐</h3>
+                <p id="track-artist" class="text-sm text-amber-700">未知艺术家</p>
+              </div>
+
+              <!-- 控制按钮 -->
+              <div class="flex justify-center items-center gap-4 mb-4">
+                <button id="prev-btn" class="w-10 h-10 rounded-full bg-amber-200 hover:bg-amber-300 flex items-center justify-center transition-colors">
+                  <span class="text-amber-800">⏮</span>
+                </button>
+                <button id="play-pause-btn" class="w-12 h-12 rounded-full bg-amber-500 hover:bg-amber-600 flex items-center justify-center transition-colors">
+                  <span id="play-pause-icon" class="text-white text-xl">▶</span>
+                </button>
+                <button id="next-btn" class="w-10 h-10 rounded-full bg-amber-200 hover:bg-amber-300 flex items-center justify-center transition-colors">
+                  <span class="text-amber-800">⏭</span>
+                </button>
+              </div>
+
+              <!-- 进度条 -->
+              <div class="mb-4">
+                <div class="flex justify-between text-xs text-amber-700 mb-1">
+                  <span id="current-time">0:00</span>
+                  <span id="duration">0:00</span>
+                </div>
+                <input type="range" id="progress-bar" class="w-full h-2 bg-amber-200 rounded-lg appearance-none cursor-pointer" min="0" max="100" value="0">
+              </div>
+
+              <!-- 音量控制 -->
+              <div class="flex items-center gap-2">
+                <span class="text-amber-700">🔊</span>
+                <input type="range" id="volume-bar" class="flex-1 h-2 bg-amber-200 rounded-lg appearance-none cursor-pointer" min="0" max="100" value="70">
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 最小化状态 -->
+        <div id="music-player-minimized" class="fixed bottom-4 right-4 w-16 h-16 bg-gradient-to-br from-amber-50 to-orange-100 rounded-full shadow-lg border border-amber-200/50 backdrop-blur-sm z-50 transition-all duration-300 transform scale-0 opacity-0 flex items-center justify-center cursor-pointer" style="background: linear-gradient(135deg, rgba(254, 243, 199, 0.95), rgba(255, 237, 213, 0.95)); backdrop-filter: blur(10px);" onclick="window.musicPlayer?.expandPlayer();">
+          <!-- 最小化状态的眼睛 -->
+          <div class="flex gap-1">
+            <div class="realistic-eye small" id="minimized-minimize-eye">
+              <div class="eye-pupil">
+                <div class="eye-highlight"></div>
+              </div>
+            </div>
+            <div class="realistic-eye small closed" id="minimized-close-eye">
+              <div class="eye-pupil">
+                <div class="eye-highlight"></div>
+              </div>
+              <div class="eye-slash"></div>
+            </div>
+          </div>
+        </div>
+      `;
+
+      console.log('🎵 播放器界面创建完成');
+      
+      // 初始化眼睛动画
+      this.initEyeAnimations();
+    }
+
+    // 初始化眼睛动画
+    initEyeAnimations() {
+      console.log('👁️ 初始化眼睛动画系统');
+      this.startEyeAnimations();
+    }
+
+    // 启动眼睛动画
+    startEyeAnimations() {
+      console.log('👁️ 启动眼睛动画');
+      
+      // 清除之前的定时器
+      this.eyeAnimationTimers.forEach(timer => clearTimeout(timer));
+      this.eyeAnimationTimers = [];
+      
+      // 开始眼睛动画循环
+      this.scheduleEyeAnimation();
+    }
+
+    // 调度眼睛动画
+    scheduleEyeAnimation() {
+      const scheduleNext = () => {
+        const delay = this.isPlaying ? 
+          2000 + Math.random() * 3000 : // 播放时：2-5秒
+          5000 + Math.random() * 5000;  // 暂停时：5-10秒
+        
+        const timer = setTimeout(() => {
+          this.performEyeAnimation();
+          scheduleNext();
+        }, delay);
+        
+        this.eyeAnimationTimers.push(timer);
+      };
+      
+      scheduleNext();
+    }
+
+    // 执行眼睛动画
+    performEyeAnimation() {
+      console.log('👁️ 执行眼睛动画，播放状态:', this.isPlaying);
+      
+      const eyes = document.querySelectorAll('.realistic-eye:not(.closed)');
+      
+      eyes.forEach(eye => {
+        const pupil = eye.querySelector('.eye-pupil');
+        if (!pupil) return;
+        
+        // 清除之前的动画类
+        pupil.classList.remove('blink', 'look-around', 'music-pulse');
+        
+        if (this.isPlaying) {
+          // 播放时：音乐感应动画
+          const animations = ['blink', 'look-around', 'music-pulse'];
+          const animation = animations[Math.floor(Math.random() * animations.length)];
+          pupil.classList.add(animation);
+          
+          // 添加整体振动效果
+          eye.classList.add('music-vibrating');
+          setTimeout(() => {
+            eye.classList.remove('music-vibrating');
+          }, 1000);
+          
+        } else {
+          // 暂停时：缓慢眨眼
+          pupil.classList.add('blink');
+        }
+        
+        // 清除动画类
+        setTimeout(() => {
+          pupil.classList.remove('blink', 'look-around', 'music-pulse');
+        }, 2000);
+      });
+    }
+
+    bindEvents() {
+      console.log('🎵 绑定事件监听器');
+      
+      const playPauseBtn = document.getElementById('play-pause-btn');
+      const prevBtn = document.getElementById('prev-btn');
+      const nextBtn = document.getElementById('next-btn');
+      const progressBar = document.getElementById('progress-bar');
+      const volumeBar = document.getElementById('volume-bar');
+
+      if (playPauseBtn) {
+        playPauseBtn.addEventListener('click', () => this.togglePlayPause());
+      }
+      
+      if (prevBtn) {
+        prevBtn.addEventListener('click', () => this.previousTrack());
+      }
+      
+      if (nextBtn) {
+        nextBtn.addEventListener('click', () => this.nextTrack());
+      }
+      
+      if (progressBar) {
+        progressBar.addEventListener('input', (e) => this.seekTo(e.target.value));
+      }
+      
+      if (volumeBar) {
+        volumeBar.addEventListener('input', (e) => this.setVolume(e.target.value));
+      }
+    }
+
+    loadPlaylist() {
+      console.log('🎵 加载播放列表');
+      this.playlist = [
+        {
+          title: "示例音乐",
+          artist: "示例艺术家",
+          src: "/music/example.mp3"
+        }
+      ];
+    }
+
+    togglePlayPause() {
+      console.log('🎵 切换播放/暂停状态');
+      
+      if (!this.audioElement) {
+        console.log('🎵 创建新的音频元素');
+        this.audioElement = new Audio();
+        this.audioElement.volume = 0.7;
+        
+        this.audioElement.addEventListener('loadedmetadata', () => {
+          this.updateDuration();
+        });
+        
+        this.audioElement.addEventListener('timeupdate', () => {
+          this.updateProgress();
+        });
+        
+        this.audioElement.addEventListener('ended', () => {
+          this.nextTrack();
+        });
+      }
+
+      if (this.isPlaying) {
+        this.audioElement.pause();
+        this.isPlaying = false;
+        document.getElementById('play-pause-icon').textContent = '▶';
+      } else {
+        // 如果没有设置音频源，使用默认音频
+        if (!this.audioElement.src && this.playlist.length > 0) {
+          const track = this.playlist[this.currentTrackIndex];
+          this.audioElement.src = this.resolveAudioPath(track.src);
+          this.updateTrackInfo();
+        }
+        
+        this.audioElement.play().catch(e => {
+          console.error('播放失败:', e);
+        });
+        this.isPlaying = true;
+        document.getElementById('play-pause-icon').textContent = '⏸';
+      }
+      
+      // 触发眼睛眨眼动画
+      this.triggerEyeBlink();
+    }
+
+    // 触发眼睛眨眼
+    triggerEyeBlink() {
+      console.log('👁️ 触发眼睛眨眼动画');
+      const eyes = document.querySelectorAll('.realistic-eye:not(.closed) .eye-pupil');
+      
+      eyes.forEach(pupil => {
+        pupil.classList.add('blink');
+        setTimeout(() => {
+          pupil.classList.remove('blink');
+        }, 300);
+      });
+    }
+
+    minimizePlayer() {
+      console.log('🎵 最小化播放器');
+      const maximized = document.getElementById('music-player-maximized');
+      const minimized = document.getElementById('music-player-minimized');
+      
+      if (maximized && minimized) {
+        maximized.style.transform = 'scale(0)';
+        maximized.style.opacity = '0';
+        
+        setTimeout(() => {
+          minimized.style.transform = 'scale(1)';
+          minimized.style.opacity = '1';
+        }, 150);
+        
+        this.isMinimized = true;
+      }
+    }
+
+    expandPlayer() {
+      console.log('🎵 展开播放器');
+      const maximized = document.getElementById('music-player-maximized');
+      const minimized = document.getElementById('music-player-minimized');
+      
+      if (maximized && minimized) {
+        minimized.style.transform = 'scale(0)';
+        minimized.style.opacity = '0';
+        
+        setTimeout(() => {
+          maximized.style.transform = 'scale(1)';
+          maximized.style.opacity = '1';
+        }, 150);
+        
+        this.isMinimized = false;
+      }
+    }
+
+    hidePlayer() {
+      console.log('🎵 隐藏播放器');
+      const container = document.getElementById('global-music-player');
+      if (container) {
+        container.style.display = 'none';
+      }
+      
+      if (this.audioElement) {
+        this.audioElement.pause();
+        this.isPlaying = false;
+      }
+    }
+
+    updateTrackInfo() {
+      if (this.playlist.length > 0) {
+        const track = this.playlist[this.currentTrackIndex];
+        const titleElement = document.getElementById('track-title');
+        const artistElement = document.getElementById('track-artist');
+        
+        if (titleElement) titleElement.textContent = track.title;
+        if (artistElement) artistElement.textContent = track.artist;
+      }
+    }
+
+    updateProgress() {
+      if (this.audioElement) {
+        const progressBar = document.getElementById('progress-bar');
+        const currentTimeElement = document.getElementById('current-time');
+        
+        if (progressBar && this.audioElement.duration) {
+          const progress = (this.audioElement.currentTime / this.audioElement.duration) * 100;
+          progressBar.value = progress;
+        }
+        
+        if (currentTimeElement) {
+          currentTimeElement.textContent = this.formatTime(this.audioElement.currentTime);
+        }
+      }
+    }
+
+    updateDuration() {
+      if (this.audioElement) {
+        const durationElement = document.getElementById('duration');
+        if (durationElement) {
+          durationElement.textContent = this.formatTime(this.audioElement.duration);
+        }
+      }
+    }
+
+    formatTime(seconds) {
+      if (isNaN(seconds)) return '0:00';
+      const minutes = Math.floor(seconds / 60);
+      const secs = Math.floor(seconds % 60);
+      return `${minutes}:${secs.toString().padStart(2, '0')}`;
+    }
+
+    seekTo(value) {
+      if (this.audioElement && this.audioElement.duration) {
+        const time = (value / 100) * this.audioElement.duration;
+        this.audioElement.currentTime = time;
+      }
+    }
+
+    setVolume(value) {
+      if (this.audioElement) {
+        this.audioElement.volume = value / 100;
+      }
+    }
+
+    previousTrack() {
+      if (this.playlist.length > 0) {
+        this.currentTrackIndex = (this.currentTrackIndex - 1 + this.playlist.length) % this.playlist.length;
+        this.loadCurrentTrack();
+      }
+    }
+
+    nextTrack() {
+      if (this.playlist.length > 0) {
+        this.currentTrackIndex = (this.currentTrackIndex + 1) % this.playlist.length;
+        this.loadCurrentTrack();
+      }
+    }
+
+    loadCurrentTrack() {
+      if (this.audioElement && this.playlist.length > 0) {
+        const track = this.playlist[this.currentTrackIndex];
+        this.audioElement.src = this.resolveAudioPath(track.src);
+        this.updateTrackInfo();
+        
+        if (this.isPlaying) {
+          this.audioElement.play();
+        }
+      }
+    }
+  }
+
+  // 初始化播放器
+  if (typeof window !== 'undefined') {
+    window.addEventListener('DOMContentLoaded', () => {
+      console.log('🎵 DOM加载完成，初始化音乐播放器');
+      window.musicPlayer = new GlobalMusicPlayer();
+    });
+  }
+</script>
+
+<style>
+  /* 眼睛按钮容器 */
+  .eye-button-container {
+    width: 24px;
+    height: 24px;
+    background: rgba(251, 191, 36, 0.2);
+    border: 1px solid rgba(251, 191, 36, 0.4);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    backdrop-filter: blur(4px);
+  }
+  
+  .eye-button-container:hover {
+    background: rgba(251, 191, 36, 0.3);
+    transform: scale(1.1);
+    box-shadow: 0 4px 8px rgba(251, 191, 36, 0.3);
+  }
+  
+  .eye-button-container:active {
+    transform: scale(0.95);
+  }
+
+  /* 逼真眼睛样式 */
+  .realistic-eye {
+    width: 16px;
+    height: 16px;
+    background: radial-gradient(circle at 30% 30%, #ffffff, #f8f9fa, #e9ecef);
+    border-radius: 50%;
+    border: 1px solid rgba(251, 191, 36, 0.6);
+    box-shadow: 
+      inset 0 1px 2px rgba(255,255,255,0.8),
+      inset 0 -1px 1px rgba(0,0,0,0.1),
+      0 2px 4px rgba(0,0,0,0.15);
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s ease;
+  }
+  
+  .realistic-eye.small {
+    width: 12px;
+    height: 12px;
+  }
+  
+  .eye-pupil {
+    width: 6px;
+    height: 6px;
+    background: radial-gradient(circle at 25% 25%, #d97706, #92400e, #000000);
+    border-radius: 50%;
+    position: relative;
+    transition: all 0.15s ease-out;
+    box-shadow: 0 0 1px rgba(0, 0, 0, 0.8);
+  }
+  
+  .realistic-eye.small .eye-pupil {
+    width: 4px;
+    height: 4px;
+  }
+  
+  .eye-highlight {
+    position: absolute;
+    top: 15%;
+    left: 25%;
+    width: 2px;
+    height: 2px;
+    background: rgba(255, 255, 255, 0.9);
+    border-radius: 50%;
+    box-shadow: 0 0 1px rgba(255, 255, 255, 0.6);
+  }
+  
+  .realistic-eye.small .eye-highlight {
+    width: 1px;
+    height: 1px;
+  }
+
+  /* 闭合眼睛样式 */
+  .realistic-eye.closed {
+    background: linear-gradient(90deg, 
+      rgba(251, 191, 36, 0.2), 
+      rgba(251, 191, 36, 0.4), 
+      rgba(251, 191, 36, 0.2)
+    );
+  }
+  
+  .realistic-eye.closed .eye-pupil {
+    opacity: 0.3;
+    transform: scaleY(0.1);
+  }
+  
+  .eye-slash {
+    position: absolute;
+    top: 50%;
+    left: 10%;
+    right: 10%;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, #d97706, transparent);
+    transform: translateY(-50%);
+  }
+
+  /* 眼睛动画效果 */
+  .eye-pupil.blink {
+    animation: eyeBlink 0.3s ease-in-out;
+  }
+  
+  .eye-pupil.look-around {
+    animation: eyeLookAround 2s ease-in-out;
+  }
+  
+  .eye-pupil.music-pulse {
+    animation: musicPulse 1s ease-in-out;
+  }
+  
+  .realistic-eye.music-vibrating {
+    animation: musicVibrate 0.5s ease-in-out;
+  }
+
+  /* 动画关键帧 */
+  @keyframes eyeBlink {
+    0%, 100% { transform: scaleY(1); }
+    50% { transform: scaleY(0.1); }
+  }
+  
+  @keyframes eyeLookAround {
+    0%, 100% { transform: translate(0, 0); }
+    25% { transform: translate(-2px, -1px); }
+    50% { transform: translate(2px, 1px); }
+    75% { transform: translate(-1px, 2px); }
+  }
+  
+  @keyframes musicPulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.2); }
+  }
+  
+  @keyframes musicVibrate {
+    0%, 100% { transform: translate(0, 0) scale(1); }
+    25% { transform: translate(-1px, 1px) scale(1.05); }
+    50% { transform: translate(1px, -1px) scale(0.95); }
+    75% { transform: translate(-1px, -1px) scale(1.05); }
+  }
+
+  /* 进度条样式 */
+  #progress-bar::-webkit-slider-thumb {
+    appearance: none;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background: #f59e0b;
+    cursor: pointer;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+  }
+  
+  #progress-bar::-moz-range-thumb {
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background: #f59e0b;
+    cursor: pointer;
+    border: none;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+  }
+  
+  #volume-bar::-webkit-slider-thumb {
+    appearance: none;
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    background: #f59e0b;
+    cursor: pointer;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+  }
+  
+  #volume-bar::-moz-range-thumb {
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    background: #f59e0b;
+    cursor: pointer;
+    border: none;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+  }
+</style>

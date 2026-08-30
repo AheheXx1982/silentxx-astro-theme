@@ -1,0 +1,114 @@
+---
+import Layout from '@layouts/Layout.astro';
+import TwoColumnLayout from '@layouts/TwoColumnLayout.astro';
+import Cover from '@components/ui/cover/Cover.astro';
+import HomeSider from '@components/layout/HomeSider.astro';
+import QuoteMarquee from '@components/fun/QuoteMarquee.astro';
+import { getAllPosts } from '@lib/content';
+import type { CollectionEntry } from 'astro:content';
+import { Icon } from 'astro-icon/components';
+
+const lang = 'en';
+
+async function getCategoryPosts(lang: string): Promise<CollectionEntry<'blog'>[]> {
+  const posts = await getAllPosts();
+  const filtered = posts.filter((post) => {
+    const postLang = post.data.lang || 'zh';
+    if (postLang !== lang) return false;
+    const cats = post.data.categories;
+    if (!cats || !Array.isArray(cats)) return false;
+    const flatCats = cats.flat(Infinity).map((c: unknown) => String(c));
+    return flatCats.includes('Options Toolbox');
+  });
+  filtered.sort((a, b) => new Date(b.data.date).getTime() - new Date(a.data.date).getTime());
+  return filtered;
+}
+
+const posts = await getCategoryPosts(lang);
+const pageTitle = `Tools & Resources | SilentXx`;
+---
+
+<Layout title={pageTitle} description="Essential tools for options trading — broker comparisons, screeners, data platforms, simulation, and efficiency templates.">
+  <TwoColumnLayout>
+    <Cover slot="cover" title="Tools & Resources" />
+    <HomeSider slot="sider" lang={lang} />
+    <QuoteMarquee lang={lang} />
+
+    <div class="shadow-box bg-gradient-start mx-0 flex w-full flex-col px-6 py-4 md:px-3 md:py-2">
+      <div class="mb-8 border-l-4 border-amber-500 bg-amber-50 dark:bg-amber-950/30 px-6 py-4 rounded-r-lg">
+        <h2 class="text-2xl font-bold text-amber-600 dark:text-amber-400 mb-3">🛠️ Tools & Resources</h2>
+        <p class="text-muted-foreground leading-relaxed">
+          The right tools make all the difference. Broker comparisons, option screeners, data platforms, simulation tools, and efficiency templates — only what I've actually used and found useful.
+        </p>
+      </div>
+
+      <div class="mb-8">
+        <h3 class="text-xl font-bold mb-4 flex items-center gap-2">
+          <span class="inline-block w-1 h-6 bg-gradient-to-b from-amber-500 to-orange-500 rounded"></span>
+          Quick Tools
+        </h3>
+        <div class="grid gap-4 md:grid-cols-2">
+          <a href="/en/greeks-calculator" class="group block bg-card border border-border rounded-lg p-5 transition-all duration-300 hover:shadow-lg hover:scale-[1.02] hover:border-primary/30">
+            <div class="flex items-start gap-4">
+              <div class="flex-shrink-0 w-12 h-12 bg-gradient-to-br from-amber-500 to-orange-500 rounded-lg flex items-center justify-center text-white">
+                <Icon name="ri:calculator-line" class="h-6 w-6" />
+              </div>
+              <div class="flex-1"><h4 class="text-lg font-semibold text-primary group-hover:text-amber-600 dark:group-hover:text-amber-400 mb-2 transition-colors">Greeks Calculator</h4>
+              <p class="text-sm text-muted-foreground">Delta · Gamma · Theta · Vega at a glance.</p></div>
+            </div>
+          </a>
+        </div>
+      </div>
+
+      <div class="mb-6">
+        <h3 class="text-xl font-bold mb-4 flex items-center gap-2">
+          <span class="inline-block w-1 h-6 bg-gradient-to-b from-amber-500 to-orange-500 rounded"></span>
+          Related Articles
+        </h3>
+        {
+          posts.length > 0 ? (
+            <div class="grid gap-4 md:grid-cols-1">
+              {posts.map((post) => (
+                <a href={`/en/article/${post.data.link ?? (typeof post.slug === 'string' ? post.slug.split('/').pop() || post.slug : String(post.slug))}`}
+                  class="group block bg-card border border-border rounded-lg p-5 transition-all duration-300 hover:shadow-lg hover:scale-[1.02] hover:border-primary/30">
+                  <div class="flex items-start gap-4">
+                    <div class="flex-shrink-0 w-12 h-12 bg-gradient-to-br from-amber-500 to-orange-500 rounded-lg flex items-center justify-center text-white font-bold text-lg">
+                      <Icon name="ri:article-line" class="h-6 w-6" />
+                    </div>
+                    <div class="flex-1 min-w-0">
+                      <h4 class="text-lg font-semibold text-primary group-hover:text-amber-600 dark:group-hover:text-amber-400 mb-2 transition-colors">{post.data.title}</h4>
+                      <p class="text-sm text-muted-foreground line-clamp-2 mb-2">{post.data.description || ''}</p>
+                      <div class="flex items-center gap-4 text-xs text-muted-foreground">
+                        <span>📅 {new Date(post.data.date).toLocaleDateString('en-US')}</span>
+                      </div>
+                    </div>
+                  </div>
+                </a>
+              ))}
+            </div>
+          ) : (
+            <div class="text-center py-12 text-muted-foreground"><p class="text-sm">Tool reviews and guides coming soon.</p></div>
+          )
+        }
+      </div>
+
+      <div class="mt-8 grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div class="bg-gradient-to-br from-amber-50 to-amber-100 dark:from-amber-950/30 dark:to-amber-900/20 rounded-lg p-4">
+          <div class="text-3xl mb-2">🏦</div>
+          <h4 class="font-semibold mb-1 text-amber-900 dark:text-amber-300">Broker Reviews</h4>
+          <p class="text-sm text-muted-foreground">IBKR · Tiger · Moomoo compared</p>
+        </div>
+        <div class="bg-gradient-to-br from-orange-50 to-orange-100 dark:from-orange-950/30 dark:to-orange-900/20 rounded-lg p-4">
+          <div class="text-3xl mb-2">📋</div>
+          <h4 class="font-semibold mb-1 text-orange-900 dark:text-orange-300">Templates</h4>
+          <p class="text-sm text-muted-foreground">Review templates · Checklists · Automation</p>
+        </div>
+        <div class="bg-gradient-to-br from-yellow-50 to-yellow-100 dark:from-yellow-950/30 dark:to-yellow-900/20 rounded-lg p-4">
+          <div class="text-3xl mb-2">🤖</div>
+          <h4 class="font-semibold mb-1 text-yellow-900 dark:text-yellow-300">AI Tools</h4>
+          <p class="text-sm text-muted-foreground">Hermes · AI workflows · Automation</p>
+        </div>
+      </div>
+    </div>
+  </TwoColumnLayout>
+</Layout>

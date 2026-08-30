@@ -1,0 +1,244 @@
+---
+import Layout from '@layouts/Layout.astro';
+import TwoColumnLayout from '@layouts/TwoColumnLayout.astro';
+import Cover from '@components/ui/cover/Cover.astro';
+import HomeSider from '@components/layout/HomeSider.astro';
+import QuoteMarquee from '@components/fun/QuoteMarquee.astro';
+import { getSeoConfig } from '@lib/i18n';
+import { Icon } from 'astro-icon/components';
+
+const seoConfig = getSeoConfig('zh');
+---
+
+<Layout
+  title={`超级终端 | ${seoConfig.title}`}
+  description="SilentXx 超级终端 — 本地优先的私人 AI 控制台：语音对话、情报系统、投资组合监控、作战室、知识库一体，数据不出本机。"
+>
+  <TwoColumnLayout>
+    <Cover slot="cover" title="超级终端" />
+    <HomeSider slot="sider" lang="zh" />
+    <QuoteMarquee />
+
+    <div class="shadow-box bg-gradient-start mx-0 flex w-full flex-col gap-6 px-6 py-4 md:px-3 md:py-2">
+      <!-- 头部 -->
+      <div class="mb-2 rounded-r-lg border-l-4 border-slate-500 bg-slate-50 px-6 py-4 dark:bg-slate-950/30">
+        <h2 class="mb-3 text-2xl font-bold text-slate-700 dark:text-slate-300">🖥️ 超级终端</h2>
+        <p class="text-muted-foreground leading-relaxed">
+          不依赖浏览器的本地 AI 控制台——双击启动，按住说话，SilentXx 聆听、思考、用自然语音回答。
+          情报系统、投资组合、作战室、知识库、未来事件，一屏尽在掌握。所有数据读本地，对话走私有通道，<strong
+            >数据不出本机</strong
+          >。
+        </p>
+      </div>
+
+      <!-- 界面截图（脱敏版：不包含任何真实账户数据） -->
+      <div class="mt-2">
+        <img
+          src="/images/tools/silentxx-app.webp"
+          alt="超级终端界面（数据已脱敏）"
+          class="border-border w-full rounded-lg border shadow-md"
+          loading="lazy"
+        />
+        <p class="text-muted-foreground mt-2 text-center text-xs">界面示意（账户/持仓/金额/风险数据已打码处理）</p>
+      </div>
+
+      <!-- 状态徽章 -->
+      <div class="flex flex-wrap gap-2">
+        <span class="rounded-full bg-amber-500/10 px-2.5 py-1 text-xs text-amber-600 dark:text-amber-400"
+          >私人项目 · 仅自用</span
+        >
+        <span class="rounded-full bg-emerald-500/10 px-2.5 py-1 text-xs text-emerald-600 dark:text-emerald-400"
+          >本地优先 · 数据不出本机</span
+        >
+        <span class="rounded-full bg-sky-500/10 px-2.5 py-1 text-xs text-sky-600 dark:text-sky-400">原生窗口 · 双击即用</span>
+        <span class="rounded-full bg-purple-500/10 px-2.5 py-1 text-xs text-purple-600 dark:text-purple-400"
+          >AI 语音对话 · 自然语音回复</span
+        >
+      </div>
+
+      <!-- 系统特色 -->
+      <div class="mt-2">
+        <h3 class="mb-4 flex items-center gap-2 text-xl font-bold">
+          <span class="inline-block h-6 w-1 rounded bg-gradient-to-b from-slate-500 to-slate-700"></span>
+          系统特色
+        </h3>
+        <div class="grid gap-3 md:grid-cols-2">
+          <div class="bg-card border-border flex items-start gap-3 rounded-lg border p-4">
+            <span class="text-xl">🎤</span>
+            <div>
+              <h4 class="mb-1 font-semibold">语音即命令</h4><p class="text-muted-foreground text-sm">
+                按住说话 → 聆听 → 思考 → 自然语音回复。动嘴不动手，交易复盘、情报查询张口就来
+              </p>
+            </div>
+          </div>
+          <div class="bg-card border-border flex items-start gap-3 rounded-lg border p-4">
+            <span class="text-xl">🧠</span>
+            <div>
+              <h4 class="mb-1 font-semibold">AI 大脑</h4><p class="text-muted-foreground text-sm">
+                主模型驱动 + Hermes Agent 运行中，深度报告、情报研判、策略问答由 AI 实时生成
+              </p>
+            </div>
+          </div>
+          <div class="bg-card border-border flex items-start gap-3 rounded-lg border p-4">
+            <span class="text-xl">🔒</span>
+            <div>
+              <h4 class="mb-1 font-semibold">本地优先</h4><p class="text-muted-foreground text-sm">
+                数据读本地文件，不经过第三方浏览器；对话走私有加密通道，隐私边界清晰
+              </p>
+            </div>
+          </div>
+          <div class="bg-card border-border flex items-start gap-3 rounded-lg border p-4">
+            <span class="text-xl">⚡</span>
+            <div>
+              <h4 class="mb-1 font-semibold">原生窗口</h4><p class="text-muted-foreground text-sm">
+                不依赖浏览器，双击启动；可打包为独立可执行文件，随开随用
+              </p>
+            </div>
+          </div>
+          <div class="bg-card border-border flex items-start gap-3 rounded-lg border p-4">
+            <span class="text-xl">📊</span>
+            <div>
+              <h4 class="mb-1 font-semibold">数据驱动</h4><p class="text-muted-foreground text-sm">
+                DSA 情报管道 / 持仓同步 / 定时任务自动喂数据，打开就是最新状态
+              </p>
+            </div>
+          </div>
+          <div class="bg-card border-border flex items-start gap-3 rounded-lg border p-4">
+            <span class="text-xl">🔗</span>
+            <div>
+              <h4 class="mb-1 font-semibold">双端联动</h4><p class="text-muted-foreground text-sm">
+                本地应用 + 网站版数据同源，在家用原生窗口，外出用手机浏览器
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 核心模块说明 -->
+      <div class="mt-2">
+        <h3 class="mb-4 flex items-center gap-2 text-xl font-bold">
+          <span class="inline-block h-6 w-1 rounded bg-gradient-to-b from-slate-500 to-slate-700"></span>
+          核心模块说明
+        </h3>
+        <div class="space-y-3">
+          <div class="bg-card border-border rounded-lg border p-4">
+            <div class="mb-2 flex items-center gap-2">
+              <span class="text-lg">🎮</span>
+              <h4 class="font-semibold">指挥台 · 对话中枢</h4>
+              <span class="ml-auto rounded-full bg-slate-500/10 px-2 py-0.5 text-xs text-slate-500 dark:text-slate-300"
+                >主入口</span
+              >
+            </div>
+            <p class="text-muted-foreground text-sm">
+              底部命令栏支持语音与打字双输入，回车发送。问题直接抛给 AI，涉及知识库内容自动检索 Wiki 回答。
+            </p>
+          </div>
+          <div class="bg-card border-border rounded-lg border p-4">
+            <div class="mb-2 flex items-center gap-2">
+              <span class="text-lg">🕵️</span>
+              <h4 class="font-semibold">情报系统 INTELLIGENCE</h4>
+              <span class="ml-auto rounded-full bg-emerald-500/10 px-2 py-0.5 text-xs text-emerald-600 dark:text-emerald-400"
+                >盘前 · 盘中 · 盘后</span
+              >
+            </div>
+            <p class="text-muted-foreground text-sm">
+              扫描结果（盘前异动/IV 跳升）、深度报告（DSA
+              综合评分）、黑天鹅/恐慌猎手、事件日历、工具库——情报链路全自动，开盘前已备好。
+            </p>
+          </div>
+          <div class="bg-card border-border rounded-lg border p-4">
+            <div class="mb-2 flex items-center gap-2">
+              <span class="text-lg">💼</span>
+              <h4 class="font-semibold">投资组合 INVESTMENT</h4>
+              <span class="ml-auto rounded-full bg-amber-500/10 px-2 py-0.5 text-xs text-amber-600 dark:text-amber-400"
+                >实时监控</span
+              >
+            </div>
+            <p class="text-muted-foreground text-sm">
+              账户总览（Total Value / 现金 /
+              杠杆）、期权持仓明细、尾部风险预警、集中度红线提示——风险状态一屏看清，超红线自动标红提醒。
+            </p>
+          </div>
+          <div class="bg-card border-border rounded-lg border p-4">
+            <div class="mb-2 flex items-center gap-2">
+              <span class="text-lg">🗺️</span>
+              <h4 class="font-semibold">作战室 · 目标与进展</h4>
+              <span class="ml-auto rounded-full bg-sky-500/10 px-2 py-0.5 text-xs text-sky-600 dark:text-sky-400">战略中枢</span
+              >
+            </div>
+            <p class="text-muted-foreground text-sm">
+              战略基石、本周聚焦、处置清单——把「期权 × AI 融合」战略拆成可执行的目标与进展，每日复盘对照。
+            </p>
+          </div>
+          <div class="bg-card border-border rounded-lg border p-4">
+            <div class="mb-2 flex items-center gap-2">
+              <span class="text-lg">📚</span>
+              <h4 class="font-semibold">Obsidian 笔记 · 知识库</h4>
+              <span class="ml-auto rounded-full bg-purple-500/10 px-2 py-0.5 text-xs text-purple-600 dark:text-purple-400"
+                >知识资产</span
+              >
+            </div>
+            <p class="text-muted-foreground text-sm">
+              知识库 / 期权实战 / 自画像 / 每日复盘 / 美股情报社 / 期权使用手册 / 认知觉醒——课程笔记与情报沉淀一键直达。
+            </p>
+          </div>
+          <div class="bg-card border-border rounded-lg border p-4">
+            <div class="mb-2 flex items-center gap-2">
+              <span class="text-lg">📅</span>
+              <h4 class="font-semibold">未来事件 FUTURE</h4>
+              <span class="ml-auto rounded-full bg-rose-500/10 px-2 py-0.5 text-xs text-rose-600 dark:text-rose-400"
+                >风险日历</span
+              >
+            </div>
+            <p class="text-muted-foreground text-sm">
+              宏观事件、财报日历、期权到期倒计时——避开事件窗口，提前布局，不在财报前裸奔。
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <!-- 双端联动 -->
+      <div class="mt-2">
+        <h3 class="mb-4 flex items-center gap-2 text-xl font-bold">
+          <span class="inline-block h-6 w-1 rounded bg-gradient-to-b from-slate-500 to-slate-700"></span>
+          双端联动
+        </h3>
+        <div class="grid gap-3 md:grid-cols-2">
+          <div class="bg-card border-border rounded-lg border p-4">
+            <h4 class="mb-1 font-semibold">🏠 本地应用</h4>
+            <p class="text-muted-foreground text-sm">在家：原生窗口，语音交互，不依赖浏览器</p>
+          </div>
+          <div class="bg-card border-border rounded-lg border p-4">
+            <h4 class="mb-1 font-semibold">📱 网站版</h4>
+            <p class="text-muted-foreground text-sm">外出：手机/任何电脑访问私有入口，数据同源</p>
+          </div>
+        </div>
+        <p class="text-muted-foreground mt-3 text-xs">
+          同一套数据管道（DSA 日报 / 持仓同步 / 定时任务），本地与网站版共用，一处更新处处同步。
+        </p>
+      </div>
+
+      <!-- 隐私说明 -->
+      <div class="mt-2 rounded-lg border border-amber-500/30 bg-amber-50 p-4 dark:bg-amber-950/30">
+        <h4 class="mb-2 flex items-center gap-2 font-semibold text-amber-700 dark:text-amber-400">
+          <Icon name="ri:shield-check-line" class="h-5 w-5" /> 数据与隐私说明
+        </h4>
+        <ul class="text-muted-foreground list-disc space-y-1.5 pl-5 text-sm">
+          <li>账户与持仓数据全部存储在本地，由本地服务读取，不写入公开网络</li>
+          <li>对话请求走私有加密通道，用于回答问题的知识来自自建 Wiki</li>
+          <li>本项目为个人自用工具，不对外提供服务，不开源、不提供下载</li>
+          <li>页面展示仅作作品介绍，界面截图已对账户/持仓/金额/风险数据打码</li>
+        </ul>
+      </div>
+
+      <div class="mt-2 text-center">
+        <a
+          href="/tools"
+          class="text-muted-foreground hover:text-primary inline-flex items-center gap-1 text-sm transition-colors"
+        >
+          <Icon name="ri:arrow-left-line" class="h-4 w-4" /> 返回工具与资源
+        </a>
+      </div>
+    </div>
+  </TwoColumnLayout>
+</Layout>

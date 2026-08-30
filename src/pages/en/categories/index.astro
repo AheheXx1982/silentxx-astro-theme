@@ -1,0 +1,24 @@
+---
+import CategoryList from '@components/category/CategoryList.astro';
+import HomeSider from '@components/layout/HomeSider.astro';
+import Cover from '@components/ui/cover/Cover.astro';
+import Layout from '@layouts/Layout.astro';
+import TwoColumnLayout from '@layouts/TwoColumnLayout.astro';
+import { getCategoryLinks, getCategoryList } from '@lib/content';
+import { getSeoConfig, getUIText } from '@lib/i18n';
+import QuoteMarquee from '@components/fun/QuoteMarquee.astro';
+
+const { categories, countMap } = await getCategoryList('en');
+const links = getCategoryLinks(categories, '');
+const seoConfig = getSeoConfig('en');
+const uiText = getUIText('en');
+---
+
+<Layout title={`${uiText.categoriesTitle} | ${seoConfig.title}`}>
+  <TwoColumnLayout>
+    <Cover slot="cover" title={uiText.categoriesTitle} />
+    <HomeSider slot="sider" lang="en" />
+    <QuoteMarquee />
+    <CategoryList categories={categories} countMap={countMap} totalCount={categories.length ?? 0} lang="en" />
+  </TwoColumnLayout>
+</Layout>

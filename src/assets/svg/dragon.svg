@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+  <path d="M20,50 Q30,30 40,40 Q50,50 60,40 Q70,30 80,40 Q90,50 80,60 Q70,70 60,60 Q50,50 40,60 Q30,70 20,60 Z" fill="#FF6B6B"/>
+  <path d="M85,45 L95,40 L95,50 Z" fill="#FF6B6B"/> <!-- 龙角 -->
+  <circle cx="35" cy="45" r="3" fill="#fff"/> <!-- 眼睛 -->
+  <circle cx="35" cy="45" r="1.5" fill="#000"/>
+</svg>

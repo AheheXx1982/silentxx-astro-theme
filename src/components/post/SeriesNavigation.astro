@@ -1,0 +1,129 @@
+---
+import { Icon } from 'astro-icon/components';
+import type { BlogPost } from 'types/blog';
+
+interface Props {
+  prevPost?: BlogPost | null;
+  nextPost?: BlogPost | null;
+  lang?: string;
+}
+
+const { prevPost, nextPost, lang = 'zh' } = Astro.props;
+
+// 如果没有上一篇和下一篇，不显示导航
+if (!prevPost && !nextPost) {
+  return null;
+}
+
+const uiText = {
+  zh: {
+    prevArticle: '上一篇',
+    nextArticle: '下一篇',
+    seriesNavigation: '系列导航',
+  },
+  en: {
+    prevArticle: 'Previous',
+    nextArticle: 'Next',
+    seriesNavigation: 'Series Navigation',
+  },
+};
+
+const text = uiText[lang as keyof typeof uiText];
+
+// 获取文章链接
+function getArticleLink(post: BlogPost, currentLang: string) {
+  const slug = post.data?.link ?? (typeof post.slug === 'string' ? post.slug.split('/').pop() : post.slug);
+  const prefix = currentLang === 'en' ? '/en' : '';
+  return `${prefix}/article/${slug}`;
+}
+---
+
+<nav class="series-navigation shadow-box bg-gradient-start mt-8 overflow-hidden rounded-xl p-6 md:p-4">
+  <h3 class="text-primary mb-4 flex items-center gap-2 text-lg font-bold md:text-base">
+    <Icon name="ri:book-2-line" class="h-5 w-5" />
+    {text.seriesNavigation}
+  </h3>
+
+  <div class="grid grid-cols-1 gap-4 md:gap-3 lg:grid-cols-2">
+    <!-- 上一篇 -->
+    {
+      prevPost ? (
+        <a
+          href={getArticleLink(prevPost, lang)}
+          class="series-nav-card group bg-background/50 hover:bg-background/80 flex flex-col gap-2 rounded-lg p-4 transition-all duration-300 hover:shadow-md md:p-3"
+          aria-label={`${text.prevArticle}: ${prevPost.data.title}`}
+        >
+          <div class="text-muted-foreground flex items-center gap-2 text-sm">
+            <Icon name="ri:arrow-left-line" class="h-4 w-4 transition-transform group-hover:-translate-x-1" />
+            <span class="font-medium">{text.prevArticle}</span>
+          </div>
+          <h4 class="text-primary group-hover:text-blue line-clamp-2 text-base font-semibold transition-colors md:text-sm">
+            {prevPost.data.title}
+          </h4>
+          {prevPost.data.description && (
+            <p class="text-muted-foreground line-clamp-2 text-sm md:text-xs">{prevPost.data.description}</p>
+          )}
+        </a>
+      ) : (
+        <div class="series-nav-card-placeholder bg-background/20 flex items-center justify-center rounded-lg p-4 md:p-3 lg:block">
+          <span class="text-muted-foreground/50 text-sm">已是第一篇</span>
+        </div>
+      )
+    }
+
+    <!-- 下一篇 -->
+    {
+      nextPost ? (
+        <a
+          href={getArticleLink(nextPost, lang)}
+          class="series-nav-card group bg-background/50 hover:bg-background/80 flex flex-col gap-2 rounded-lg p-4 text-right transition-all duration-300 hover:shadow-md md:p-3"
+          aria-label={`${text.nextArticle}: ${nextPost.data.title}`}
+        >
+          <div class="text-muted-foreground flex items-center justify-end gap-2 text-sm">
+            <span class="font-medium">{text.nextArticle}</span>
+            <Icon name="ri:arrow-right-line" class="h-4 w-4 transition-transform group-hover:translate-x-1" />
+          </div>
+          <h4 class="text-primary group-hover:text-blue line-clamp-2 text-base font-semibold transition-colors md:text-sm">
+            {nextPost.data.title}
+          </h4>
+          {nextPost.data.description && (
+            <p class="text-muted-foreground line-clamp-2 text-sm md:text-xs">{nextPost.data.description}</p>
+          )}
+        </a>
+      ) : (
+        <div class="series-nav-card-placeholder bg-background/20 flex items-center justify-center rounded-lg p-4 text-right md:p-3 lg:block">
+          <span class="text-muted-foreground/50 text-sm">已是最后一篇</span>
+        </div>
+      )
+    }
+  </div>
+</nav>
+
+<style>
+  .series-navigation {
+    border: 1px solid hsl(var(--border) / 0.1);
+  }
+
+  .series-nav-card {
+    border: 1px solid hsl(var(--border) / 0.2);
+  }
+
+  .series-nav-card:hover {
+    border-color: hsl(var(--primary) / 0.3);
+  }
+
+  .series-nav-card-placeholder {
+    border: 1px dashed hsl(var(--border) / 0.3);
+  }
+
+  @media (max-width: 768px) {
+    .series-nav-card,
+    .series-nav-card-placeholder {
+      text-align: left !important;
+    }
+
+    .series-nav-card .flex.justify-end {
+      justify-content: flex-start !important;
+    }
+  }
+</style>

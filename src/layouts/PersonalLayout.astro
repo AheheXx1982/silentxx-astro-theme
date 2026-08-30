@@ -1,0 +1,66 @@
+---
+// PersonalLayout — 问心·个人频道
+import '@styles/index.css';
+import Footer from '@components/layout/Footer.astro';
+import { Icon } from 'astro-icon/components';
+
+interface Props {
+  title: string;
+  description?: string;
+  ogImage?: string;
+}
+
+const { title, description = '投资 · AI · 写作 · 生活', ogImage } = Astro.props;
+---
+
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="robots" content="index, follow" />
+  <title>{title} | 问心剑</title>
+  <meta name="description" content={description} />
+  {ogImage && <meta property="og:image" content={ogImage} />}
+  <meta property="og:title" content={`${title} | 问心剑`} />
+  <meta property="og:description" content={description} />
+  <link rel="canonical" href={`https://wenxin.silentxx.com${Astro.url.pathname}`} />
+</head>
+<body class="min-h-screen text-gray-800 bg-stone-50">
+
+  <!-- Header — 问心品牌 -->
+  <header class="sticky top-0 z-50 border-b border-stone-200 bg-stone-50/90 backdrop-blur-md">
+    <div class="max-w-3xl mx-auto px-6 h-16 flex items-center justify-between">
+      <a href="/personal" class="flex items-center gap-3 text-stone-700 hover:text-stone-900 transition-colors group">
+        <div class="w-8 h-8 rounded-lg bg-amber-100 flex items-center justify-center group-hover:bg-amber-200 transition-colors">
+          <Icon name="ri:quill-pen-line" class="h-4 w-4 text-amber-600" />
+        </div>
+        <span class="text-lg font-serif tracking-wide">问心</span>
+        <span class="text-xs text-stone-400 hidden sm:inline">· 问心剑的个人笔记</span>
+      </a>
+      <nav class="flex items-center gap-4 text-sm text-stone-500">
+        <a href="/personal" class="hover:text-amber-600 transition-colors">首页</a>
+        <a href="/personal/articles" class="hover:text-amber-600 transition-colors">文章</a>
+        <a href="/personal/about" class="hover:text-amber-600 transition-colors">关于</a>
+        <a href="https://silentxx.com" class="text-stone-300 hover:text-stone-500 transition-colors" title="返回主站">
+          <Icon name="ri:arrow-left-line" class="h-4 w-4" />
+        </a>
+      </nav>
+    </div>
+  </header>
+
+  <!-- Main Content -->
+  <main class="max-w-3xl mx-auto px-6 py-12">
+    <slot />
+  </main>
+
+  <!-- Footer -->
+  <footer class="border-t border-stone-200 py-8 text-center text-sm text-stone-400">
+    <div class="max-w-3xl mx-auto px-6 space-y-1">
+      <p>问心 <span class="text-stone-300">·</span> <a href="https://silentxx.com" class="hover:text-stone-600 transition-colors">SilentXx</a> 个人频道</p>
+      <p class="text-xs">投资 · AI · 写作 · 生活 — 先问心，再出剑。</p>
+    </div>
+  </footer>
+
+</body>
+</html>

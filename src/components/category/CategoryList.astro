@@ -1,0 +1,125 @@
+---
+import { categoryMap } from '@constants/category';
+import type { Category } from '@lib/content';
+import CategoryTitle from './CategoryTitle.astro';
+import SubCategory from './SubCategory.astro';
+import { getCategoryLinks, getCategoryList } from '@lib/content';
+import { getLanguageFromAstroUrl, getUIText } from '@lib/i18n';
+
+interface Props {
+  categories: Category[];
+  countMap: Record<string, number>;
+  totalCount: number;
+  lang?: 'zh' | 'en';
+}
+
+interface CategoryLink {
+  category: Category;
+  originalName: string;
+  link: string;
+  totalCount: number;
+}
+
+const { categories, countMap, totalCount, lang } = Astro.props;
+
+// 获取当前语言
+const currentLang = lang || getLanguageFromAstroUrl(Astro.url);
+const uiText = getUIText(currentLang);
+
+// 过滤掉期权精品课分类（仅在左侧导航显示）
+const filteredCategories = categories.filter(category => 
+  category.name !== '期权精品课' && category.name !== 'Premium Course'
+);
+
+// 根据语言生成首页链接
+const homeLink = currentLang === 'en' ? '/en' : '/';
+const categoryLinkPrefix = currentLang === 'en' ? '/en/categories' : '/categories';
+
+// 计算子分类总数
+const subCategoryCount = filteredCategories.reduce((total, category) => {
+  return total + (category?.children?.length || 0);
+}, 0);
+
+// 分类名称翻译函数
+const translateCategoryName = (categoryName: string): string => {
+  if (currentLang === 'en' && uiText.categoryNames) {
+    const translated = (uiText.categoryNames as Record<string, string>)[categoryName];
+    return translated || categoryName;
+  }
+  return categoryName;
+};
+
+// 计算一级分类的文章总数（累加所有子分类的数量）
+const getCategoryTotalCount = (category: Category): number => {
+  if (!category.children || category.children.length === 0) {
+    // 如果没有子分类，直接返回该分类的数量
+    return countMap[category.name] || 0;
+  }
+  // 如果有子分类，累加所有子分类的数量
+  return category.children.reduce((total, child) => {
+    return total + (countMap[child.name] || 0);
+  }, 0);
+};
+
+const categoryLinks: CategoryLink[] = filteredCategories.map((category: Category) => {
+  const links = getCategoryLinks([category]);
+  const translatedName = translateCategoryName(category.name);
+  
+  // 优先使用 getCategoryLinks，其次是 categoryMap，最后使用安全的英文默认值
+  let link = '';
+  if (links.length > 0) {
+    link = links[0];
+  } else if (categoryMap[category.name]) {
+    link = categoryMap[category.name];
+  } else {
+    // 如果都没找到，移除中文字符并生成安全的英文占位符
+    console.warn(`[CategoryList] No mapping found for: "${category.name}"`);
+    link = 'category-' + Math.random().toString(36).substr(2, 9);
+  }
+  
+  return {
+    category: { ...category, name: translatedName },
+    originalName: category.name, // 保存原始分类名称用于SubCategory
+    link,
+    totalCount: getCategoryTotalCount(category), // 计算总数量
+  };
+});
+---
+
+<div class="shadow-box bg-gradient-start mx-0 flex w-full flex-col px-6 py-4 md:px-3 md:py-2">
+  <h2 class="shoka-decoration-circle group relative px-7.5 py-5 text-2xl/9 font-bold">
+    <a href={homeLink} class="dashed-border text-muted-foreground group-hover:border-blue group-hover:text-blue border-b">
+      {uiText.home}
+    </a>
+    <span class="text-muted-foreground text-xl">/</span>
+    {uiText.totalCategoriesCount}
+    {totalCount}
+    {uiText.categoriesUnit}
+    {subCategoryCount > 0 && (
+      <span>, {subCategoryCount}{uiText.totalSubcategoriesCount}</span>
+    )}
+  </h2>
+
+  <div class="flex w-full flex-col">
+    {
+      categoryLinks.map(({ category, originalName, link, totalCount }: CategoryLink) => (
+        <>
+          <CategoryTitle
+            title={category.name}
+            count={totalCount}
+            href={`${categoryLinkPrefix}${link ? '/' + link : ''}`}
+            className={category?.children?.length ? 'has-children' : ''}
+          />
+          {category?.children?.length && (
+            <div class="category-first-level-container flex flex-col">
+              {category?.children?.length &&
+                category.children.map((child: Category) => (
+                  <SubCategory category={child} parentName={originalName} countMap={countMap} lang={currentLang} />
+                ))}
+            </div>
+          )}
+        </>
+      ))
+    }
+  </div>
+</div>

@@ -1,0 +1,202 @@
+---
+import HomeSider from '@components/layout/HomeSider.astro';
+import Cover from '@components/ui/cover/Cover.astro';
+import CustomContent from '@components/common/CustomContent.astro';
+import { HomeSiderType } from '@constants/enum';
+import { siteConfig } from '@constants/site-config';
+import Layout from '@layouts/Layout.astro';
+import TwoColumnLayout from '@layouts/TwoColumnLayout.astro';
+import { getCategoryArr, getSortedPosts, getCategoryLink } from '@lib/content';
+import { render } from 'astro:content';
+import SeriesNavigation from '@components/post/SeriesNavigation.astro';
+import { parseDate } from '@lib/datetime';
+import { Icon } from 'astro-icon/components';
+import QuoteMarquee from '@components/fun/QuoteMarquee.astro';
+import { getLanguageFromAstroUrl } from '@lib/i18n';
+import OptionsBrandBanner from '@components/options/OptionsBrandBanner.astro';
+
+export async function getStaticPaths() {
+  const postCollections = await getSortedPosts('zh', true);
+
+  // 确保 postCollections 存在且为数组
+  if (!postCollections || !Array.isArray(postCollections)) {
+    return [];
+  }
+
+  const paths = [];
+  for (const post of postCollections) {
+    // 确保 post 和 post.slug 存在
+    let slug: string;
+    if (post?.slug) {
+      if (typeof post.slug === 'string') {
+        slug = post.slug;
+      } else {
+        // 安全地处理数组情况，避免类型错误
+        try {
+          // 使用类型断言来解决TypeScript类型问题
+          const slugArray = post.slug as string[] | unknown[];
+          slug = Array.isArray(slugArray) ? slugArray.join('/') : String(post.slug);
+        } catch (e) {
+          slug = 'untitled';
+        }
+      }
+    } else {
+      slug = 'untitled';
+    }
+
+    // 使用自定义链接或slug作为文章标识符，而不是完整路径
+    let link: string;
+    if (post.data?.link) {
+      link = post.data.link;
+    } else if (typeof slug === 'string') {
+      const parts = slug.split('/');
+      link = parts.pop() || slug;
+    } else {
+      link = 'untitled';
+    }
+
+    // 确保link是字符串类型
+    const finalLink = typeof link === 'string' ? link : String(link);
+
+    paths.push({
+      params: { slug: finalLink },
+      props: { post },
+    });
+  }
+
+  return paths;
+}
+
+// 确保 Astro.props 存在
+const { post } = Astro.props || {};
+// 确保 post 存在
+if (!post) {
+  throw new Error('未找到文章内容');
+}
+
+const { Content } = await render(post);
+const { title, description, categories = [], tags = [], date, lang } = post?.data ?? {};
+const jsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'BlogPosting',
+  headline: title,
+  description: description || (post.body ? post.body.slice(0, 100) : ''),
+  keywords: categories?.length ? tags.concat(categories[0]) : tags,
+  author: {
+    '@type': 'Person',
+    name: siteConfig.author ?? siteConfig.name,
+    url: Astro.site?.href ?? '',
+  },
+  datePublished: parseDate(date, 'YYYY-MM-DD'),
+};
+
+// 获取当前语言
+const currentLang = lang || getLanguageFromAstroUrl(Astro.url);
+
+const categoryArr = getCategoryArr(categories?.[0]);
+const categoryStr = categoryArr?.length ? ` | ${categoryArr.join(' / ')}` : '';
+
+// Check if this article belongs to Options Basics (期权入门与基础)
+const isOptionsArticle = categoryArr?.length > 0 && categoryArr[0] === '期权入门与基础';
+
+// Get all posts for series navigation
+const allPosts = await getSortedPosts(currentLang as 'zh' | 'en', true);
+
+// Find previous and next posts in the same category
+let prevPost = null;
+let nextPost = null;
+
+if (categoryArr && categoryArr.length >= 2) {
+  // Get the second level category (e.g., '为什么要学习期权')
+  const seriesCategory = categoryArr[1];
+
+  // Filter posts with the same series category
+  const seriesPosts = allPosts.filter((p) => {
+    const pCategoryArr = getCategoryArr(p.data.categories?.[0]);
+    return pCategoryArr && pCategoryArr.length >= 2 && pCategoryArr[1] === seriesCategory;
+  });
+
+  // Sort by date to maintain chronological order
+  seriesPosts.sort((a, b) => a.data.date.valueOf() - b.data.date.valueOf());
+
+  // Find current post index
+  const currentIndex = seriesPosts.findIndex((p) => {
+    const currentSlug = post.data?.link ?? (typeof post.slug === 'string' ? post.slug.split('/').pop() : post.slug);
+    const pSlug = p.data?.link ?? (typeof p.slug === 'string' ? p.slug.split('/').pop() : p.slug);
+    return currentSlug === pSlug;
+  });
+
+  if (currentIndex !== -1) {
+    prevPost = currentIndex > 0 ? seriesPosts[currentIndex - 1] : null;
+    nextPost = currentIndex < seriesPosts.length - 1 ? seriesPosts[currentIndex + 1] : null;
+  }
+}
+
+// Generate breadcrumb data for categories
+const breadcrumbCategories = [];
+if (categoryArr?.length) {
+  for (let i = 0; i < categoryArr.length; i++) {
+    const partialCategories = categoryArr.slice(0, i + 1);
+    const link = await getCategoryLink(partialCategories);
+    breadcrumbCategories.push({
+      name: categoryArr[i],
+      link: `/categories/${link}`,
+    });
+  }
+}
+---
+
+<Layout
+  title={`${post.data.title}${categoryStr} | ${siteConfig.title}`}
+  description={description}
+  siderType={HomeSiderType.POST}
+>
+  <script is:inline slot="head" type="application/ld+json" set:html={JSON.stringify(jsonLd)} />
+  <TwoColumnLayout>
+    <Cover slot="cover" />
+    <HomeSider slot="sider" type={HomeSiderType.POST} lang={currentLang} />
+    <QuoteMarquee />
+    <div class="shadow-box bg-gradient-start flex flex-col gap-2 p-4 pt-6 md:px-5 md:py-4">
+      <!-- Breadcrumb Navigation -->
+      <nav class="text-muted-foreground flex items-center gap-2 text-sm">
+        <div class="flex items-center gap-1">
+          <!-- Home Icon and Link -->
+          <Icon name="fa6-solid:house-chimney" class="h-4 w-4" />
+          <a href={currentLang === 'en' ? '/en' : '/'} aria-label={currentLang === 'en' ? 'Back to Home' : '返回首页'}>
+            <span class="hover:text-blue transition-colors duration-300">{currentLang === 'en' ? 'Home' : '首页'}</span>
+          </a>
+        </div>
+        <!-- Category Breadcrumbs -->
+        {
+          breadcrumbCategories && breadcrumbCategories.length > 0
+            ? breadcrumbCategories.map((category, index) => (
+                <>
+                  <Icon name="ri:arrow-right-s-line" class="text-muted-foreground/60 h-4 w-4" />
+                  <a
+                    href={category.link || '#'}
+                    class={`hover:text-blue transition-colors duration-300 ${index === breadcrumbCategories.length - 1 ? 'text-primary bg-primary/10 hover:text-primary hover:bg-primary/20 rounded-full px-2.5 py-1' : ''}`}
+                    aria-label={currentLang === 'en' ? `Go to ${category.name} category` : `前往${category.name}分类`}
+                  >
+                    {category.name}
+                  </a>
+                </>
+              ))
+            : null
+        }
+      </nav>
+      <!-- Article Title -->
+      <h1 class="word-break mt-2 mb-4 text-center text-2xl font-bold leading-snug text-gray-800 md:text-3xl">
+        {post.data.title}
+      </h1>
+      <div class="mx-auto mb-6 h-0.5 w-24 rounded bg-gradient-to-r from-[#ed6ea0] to-[#ec8c69]"></div>
+      <article
+        class="prose md:prose-sm dark:prose-invert tablet:max-w-[calc(100vw-2.5rem)] tablet:w-auto w-[calc(100vw-20rem)] max-w-5xl"
+      >
+        {isOptionsArticle && <OptionsBrandBanner lang={currentLang} />}
+        <CustomContent Content={Content} />
+      </article>
+      <!-- Series Navigation -->
+      <SeriesNavigation prevPost={prevPost} nextPost={nextPost} lang={currentLang} />
+    </div>
+  </TwoColumnLayout>
+</Layout>

@@ -1,0 +1,191 @@
+---
+const { lang = 'zh' } = Astro.props;
+
+const content = {
+  zh: {
+    line1: '不赌方向，',
+    line2: '只卖时间，',
+    line3: '带你用卖方思维，收割时间价值。',
+    greeting: '大家好，我是 ',
+    name: 'SilentXx',
+    subtitle: '，你们的寂静猎手。',
+  },
+  en: {
+    line1: 'No directional bets,',
+    line2: 'Only sell time,',
+    line3: 'Master the seller mindset, harvest time value.',
+    greeting: 'Hello, I am ',
+    name: 'SilentXx',
+    subtitle: ', your Silent Hunter.',
+  },
+};
+
+const text = content[lang as keyof typeof content];
+---
+
+<div class="options-brand-banner">
+  <div class="brand-content">
+    <div class="slogan">
+      <p class="slogan-line slogan-line-1">{text.line1}</p>
+      <p class="slogan-line slogan-line-2">{text.line2}</p>
+      <p class="slogan-line slogan-line-3">{text.line3}</p>
+    </div>
+    <div class="author-intro">
+      <p>
+        {text.greeting}<span class="author-name">{text.name}</span>{text.subtitle}
+      </p>
+    </div>
+  </div>
+</div>
+
+<style>
+  .options-brand-banner {
+    margin: 2rem 0;
+    padding: 2rem;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border-radius: 12px;
+    box-shadow: 0 8px 32px rgba(102, 126, 234, 0.2);
+    position: relative;
+    overflow: hidden;
+  }
+
+  .options-brand-banner::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    right: -50%;
+    width: 200%;
+    height: 200%;
+    background: radial-gradient(circle, rgba(255, 255, 255, 0.1) 0%, transparent 70%);
+    animation: pulse 15s ease-in-out infinite;
+  }
+
+  @keyframes pulse {
+    0%,
+    100% {
+      transform: translate(0, 0) scale(1);
+    }
+    50% {
+      transform: translate(-10%, -10%) scale(1.1);
+    }
+  }
+
+  .brand-content {
+    position: relative;
+    z-index: 1;
+  }
+
+  .slogan {
+    margin-bottom: 1.5rem;
+    text-align: center;
+  }
+
+  .slogan-line {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: #ffffff;
+    margin: 0.5rem 0;
+    text-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+    letter-spacing: 0.5px;
+    animation: fadeInUp 0.8s ease-out backwards;
+  }
+
+  .slogan-line-1 {
+    animation-delay: 0.1s;
+  }
+
+  .slogan-line-2 {
+    animation-delay: 0.2s;
+  }
+
+  .slogan-line-3 {
+    animation-delay: 0.3s;
+    font-size: 1.1rem;
+    opacity: 0.95;
+  }
+
+  @keyframes fadeInUp {
+    from {
+      opacity: 0;
+      transform: translateY(20px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  .author-intro {
+    text-align: center;
+    padding-top: 1rem;
+    border-top: 1px solid rgba(255, 255, 255, 0.2);
+    animation: fadeInUp 0.8s ease-out 0.4s backwards;
+  }
+
+  .author-intro p {
+    font-size: 1rem;
+    color: #f0f0f0;
+    margin: 0;
+    font-weight: 500;
+  }
+
+  .author-name {
+    font-weight: 700;
+    color: #ffd700;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+    font-size: 1.1rem;
+    letter-spacing: 1px;
+  }
+
+  /* 响应式设计 */
+  @media (max-width: 768px) {
+    .options-brand-banner {
+      padding: 1.5rem 1rem;
+      margin: 1.5rem 0;
+    }
+
+    .slogan-line {
+      font-size: 1.1rem;
+    }
+
+    .slogan-line-3 {
+      font-size: 1rem;
+    }
+
+    .author-intro p {
+      font-size: 0.95rem;
+    }
+
+    .author-name {
+      font-size: 1rem;
+    }
+  }
+
+  @media (max-width: 480px) {
+    .slogan-line {
+      font-size: 1rem;
+    }
+
+    .slogan-line-3 {
+      font-size: 0.9rem;
+    }
+  }
+
+  /* 暗色模式适配 */
+  :global(.dark) .options-brand-banner {
+    background: linear-gradient(135deg, #4a5568 0%, #2d3748 100%);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+  }
+
+  :global(.dark) .slogan-line {
+    color: #e2e8f0;
+  }
+
+  :global(.dark) .author-intro p {
+    color: #cbd5e0;
+  }
+
+  :global(.dark) .author-name {
+    color: #fbbf24;
+  }
+</style>

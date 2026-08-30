@@ -1,0 +1,50 @@
+---
+// 音乐页 — SilentXx 音乐空间（大播放器强制显示 + 居中，无文字干扰）
+import Layout from '@layouts/Layout.astro';
+const { title = '音乐 | SilentXx', description = 'SilentXx 的音乐空间 — 汽水音乐播放器' } = Astro.props;
+---
+
+<Layout title={title} description={description}>
+  <script is:inline>
+    // 音乐页：强制显示大播放器并居中（播放器默认仅在保存状态后自显，且默认悬浮右侧）
+    (function () {
+      var centered = false;
+      function centerPlayer() {
+        var p = document.getElementById('music-player');
+        if (!p) return;
+        p.style.right = 'auto';
+        p.style.left = '50%';
+        p.style.top = '50%';
+        p.style.transform = 'translate(-50%, -50%)';
+        centered = true;
+      }
+      function forceShow() {
+        var p = window.musicPlayer;
+        if (!p) return false;
+        var ui = document.getElementById('music-player');
+        if (!ui) {
+          try {
+            p.showPlayer();
+          } catch (e) {
+            console.warn('showPlayer:', e);
+          }
+        }
+        if (document.getElementById('music-player') && window.musicPlayer) {
+          try {
+            window.musicPlayer.expandPlayer();
+          } catch (e) {
+            console.warn('expandPlayer:', e);
+          }
+          if (!centered) centerPlayer();
+          return true;
+        }
+        return false;
+      }
+      var tries = 0;
+      var timer = setInterval(function () {
+        tries++;
+        if (forceShow() || tries > 20) clearInterval(timer);
+      }, 500);
+    })();
+  </script>
+</Layout>

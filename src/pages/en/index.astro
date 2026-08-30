@@ -1,0 +1,33 @@
+---
+import ButtonLink from '@components/control/ButtonLink.astro';
+import HomeSider from '@components/layout/HomeSider.astro';
+import PostList from '@components/post/PostList.astro';
+import Cover from '@components/ui/cover/Cover.astro';
+import { HomeSiderType } from '@constants/enum';
+import Layout from '@layouts/Layout.astro';
+import TwoColumnLayout from '@layouts/TwoColumnLayout.astro';
+import { getRandomLatestPosts } from '@lib/content';
+import { getSeoConfig } from '@lib/i18n';
+import { Icon } from 'astro-icon/components';
+import QuoteMarquee from '@components/fun/QuoteMarquee.astro';
+
+const posts = await getRandomLatestPosts(5, 'en');
+const seoConfig = getSeoConfig('en');
+---
+
+<Layout title={seoConfig.title}>
+  <TwoColumnLayout>
+    <Cover slot="cover" lang="en" />
+    <HomeSider slot="sider" lang="en" />
+    <QuoteMarquee lang="en" />
+    <div class="shadow-box bg-gradient-start tablet:shadow-none flex flex-col gap-4 overflow-hidden p-4 pt-6 md:px-1 md:py-2">
+      <PostList posts={posts} showPaginator={false} lang="en" />
+    </div>
+    <div class="flex w-full flex-col items-center">
+      <ButtonLink variant="gradient-shoka" url="/en/articles" size="lg" label="All Articles" className="mt-10 items-center">
+        All Articles
+        <Icon name="gg:format-justify" />
+      </ButtonLink>
+    </div>
+  </TwoColumnLayout>
+</Layout>
