@@ -19,7 +19,7 @@ async function getCategoryPosts(lang: string): Promise<CollectionEntry<'blog'>[]
     const cats = post.data.categories;
     if (!cats || !Array.isArray(cats)) return false;
     const flatCats = cats.flat(Infinity).map((c: unknown) => String(c));
-    return flatCats.includes('稳定现金流系统');
+    return flatCats.includes('现金流系统');
   });
   filtered.sort((a, b) => new Date(b.data.date).getTime() - new Date(a.data.date).getTime());
   return filtered;
@@ -28,7 +28,7 @@ async function getCategoryPosts(lang: string): Promise<CollectionEntry<'blog'>[]
 const posts = await getCategoryPosts(lang);
 ---
 
-<Layout title={`现金流系统 | ${seoConfig.title}`} description="构建属于自己的期权现金流机器——从系统框架到策略轮动，从风险控制到回撤管理，打造每月稳定的被动收入。">
+<Layout title={`现金流系统 | ${seoConfig.title}`} description="构建属于自己的期权现金流机器——从系统框架到策略轮动，从风险控制到回撤管理，在纪律与风控中积累现金流与复利。">
   <TwoColumnLayout>
     <Cover slot="cover" title="现金流系统" />
     <HomeSider slot="sider" lang={lang} />

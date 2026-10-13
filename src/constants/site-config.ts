@@ -59,7 +59,7 @@ type SocialConfig = {
 export const siteConfig: SiteConfig = {
   title: '寂静猎手', // 网站名称
   alternate: 'SilentXx', // 网站名称
-  subtitle: '美股期权实战与稳定现金流系统', // 副标题
+  subtitle: '美股期权实战 · 现金流系统与复利实验室', // 副标题
   name: 'SilentXx',
   description: '聚焦美股期权交易，分享真实、低风险、可复制的现金流投资策略，带你走进理性与纪律构建的投资世界。', // 站点简介（一段话）
   avatar: '/img/SilentXx.webp', // 站点头像 logo.png or url

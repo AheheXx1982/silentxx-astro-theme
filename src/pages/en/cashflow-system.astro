@@ -17,7 +17,7 @@ async function getCategoryPosts(lang: string): Promise<CollectionEntry<'blog'>[]
     const cats = post.data.categories;
     if (!cats || !Array.isArray(cats)) return false;
     const flatCats = cats.flat(Infinity).map((c: unknown) => String(c));
-    return flatCats.includes('Stable Cash Flow System');
+    return flatCats.includes('Cash Flow System');
   });
   filtered.sort((a, b) => new Date(b.data.date).getTime() - new Date(a.data.date).getTime());
   return filtered;
@@ -27,7 +27,7 @@ const posts = await getCategoryPosts(lang);
 const pageTitle = `Cash Flow System | SilentXx`;
 ---
 
-<Layout title={pageTitle} description="Build your own options cash flow machine — system framework, strategy rotation, risk budgeting, and drawdown control.">
+<Layout title={pageTitle} description="Build your own options cash flow machine — from system framework to strategy rotation, from risk control to drawdown management, accumulating cash flow and compounding with discipline.">
   <TwoColumnLayout>
     <Cover slot="cover" title="Cash Flow System" />
     <HomeSider slot="sider" lang={lang} />
@@ -37,7 +37,7 @@ const pageTitle = `Cash Flow System | SilentXx`;
       <div class="mb-8 border-l-4 border-emerald-500 bg-emerald-50 dark:bg-emerald-950/30 px-6 py-4 rounded-r-lg">
         <h2 class="text-2xl font-bold text-emerald-600 dark:text-emerald-400 mb-3">💧 Cash Flow System</h2>
         <p class="text-muted-foreground leading-relaxed">
-          Options trading isn't about hitting home runs — it's about building a machine that generates consistent monthly cash flow. Framework design, strategy rotation, risk budgeting, and drawdown control.
+          Options trading isn't about hitting home runs — it's about building a machine that keeps generating cash flow. Framework design, strategy rotation, risk budgeting, and drawdown control.
         </p>
       </div>
 

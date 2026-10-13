@@ -45,7 +45,7 @@ export const i18nSiteConfig = {
   zh: {
     title: '寂静猎手',
     alternate: 'SilentXx',
-    subtitle: '美股期权实战与稳定现金流系统',
+    subtitle: '美股期权实战 · 现金流系统与复利实验室',
     description: '聚焦美股期权交易，分享真实、低风险、可复制的现金流投资策略，带你走进理性与纪律构建的投资世界。',
     author: 'SilentXx',
     navLinks: [
@@ -100,7 +100,7 @@ export const i18nSiteConfig = {
   en: {
     title: 'SilentXx｜寂静猎手',
     alternate: 'SilentXx',
-    subtitle: 'Options Trading & Stable Cash Flow System',
+    subtitle: 'Options Trading · Cash Flow System & Compounding Lab',
     description:
       'Focus on US stock options trading, sharing real, low-risk, replicable cash flow investment strategies, leading you into the investment world built by rationality and discipline.',
     author: 'SilentXx',
@@ -158,12 +158,12 @@ export const i18nSiteConfig = {
 // 多语言 SEO 配置
 export const i18nSeoConfig = {
   zh: {
-    title: 'SilentXx｜寂静猎手 · 美股期权实战与稳定现金流系统',
+    title: 'SilentXx｜寂静猎手 · 美股期权实战 · 现金流系统与复利实验室',
     description: '聚焦美股期权交易，分享真实、低风险、可复制的现金流投资策略，带你走进理性与纪律构建的投资世界。',
     keywords: 'SilentXx, 寂静猎手, 期权交易, 现金流投资, 美股期权, 投资策略, 金融博客',
   },
   en: {
-    title: 'SilentXx｜寂静猎手 · Options Trading & Stable Cash Flow System',
+    title: 'SilentXx｜寂静猎手 · Options Trading · Cash Flow System & Compounding Lab',
     description:
       'Focus on US stock options trading, sharing real, low-risk, replicable cash flow investment strategies, leading you into the investment world built by rationality and discipline.',
     keywords:
@@ -262,7 +262,7 @@ export const i18nUI = {
       卖方核心策略: '卖方核心策略',
       买方与对冲策略: '买方与对冲策略',
       实盘拆解与复盘: '实盘拆解与复盘',
-      稳定现金流系统: '稳定现金流系统',
+      现金流系统: '现金流系统',
       现金流系统构建: '现金流系统构建',
       策略组合与轮动: '策略组合与轮动',
       风险管理与回撤控制: '风险管理与回撤控制',
@@ -361,7 +361,7 @@ export const i18nUI = {
       卖方核心策略: 'Seller Strategies',
       买方与对冲策略: 'Hedging Strategies',
       实盘拆解与复盘: 'Trade Review',
-      稳定现金流系统: 'Stable Cash Flow System',
+      现金流系统: 'Cash Flow System',
       现金流系统构建: 'Cash Flow System Framework',
       策略组合与轮动: 'Strategy Allocation & Rotation',
       风险管理与回撤控制: 'Risk Management & Drawdown Control',

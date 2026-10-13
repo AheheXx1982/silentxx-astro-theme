@@ -156,7 +156,7 @@ A: Intended — they are stable, readable and valid HTML5 ids (e.g. `#为什么�
 
 ## About the brand
 
-SilentXx (寂静猎手) — options trading & steady cashflow systems; content and tools open-sourced.
+SilentXx (寂静猎手) — options trading · cash flow system & compounding lab; content and tools open-sourced.
 Main site: https://silentxx.com · Moments (问心): https://wenxin.silentxx.com
 
 MIT License © 2026 SilentXx

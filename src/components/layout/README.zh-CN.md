@@ -154,7 +154,7 @@ A：故意的——稳定、可读、合法的 HTML5 id（如 `#为什么剩下`
 
 ## 关于品牌
 
-SilentXx（寂静猎手）—— 美股期权实战与稳定现金流系统，内容与工具开源共享。
+SilentXx（寂静猎手）—— 美股期权实战 · 现金流系统与复利实验室，内容与工具开源共享。
 主页：https://silentxx.com · 问心：https://wenxin.silentxx.com
 
 MIT License © 2026 SilentXx
